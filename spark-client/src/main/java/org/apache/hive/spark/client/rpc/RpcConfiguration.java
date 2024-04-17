@@ -71,6 +71,12 @@ public final class RpcConfiguration {
     this.config = Collections.unmodifiableMap(config);
   }
 
+  public long getFutureTimeoutMs() {
+    String value = config.get(HiveConf.ConfVars.SPARK_CLIENT_FUTURE_TIMEOUT.varname);
+    return value != null ? Long.parseLong(value) : DEFAULT_CONF.getTimeVar(
+            HiveConf.ConfVars.SPARK_CLIENT_FUTURE_TIMEOUT, TimeUnit.MILLISECONDS);
+  }
+
   long getConnectTimeoutMs() {
     String value = config.get(HiveConf.ConfVars.SPARK_RPC_CLIENT_CONNECT_TIMEOUT.varname);
     return value != null ? Long.parseLong(value) : DEFAULT_CONF.getTimeVar(

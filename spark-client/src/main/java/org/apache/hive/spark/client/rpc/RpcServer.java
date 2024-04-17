@@ -57,6 +57,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.ScheduledFuture;
 
+import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience;
@@ -78,6 +79,8 @@ public class RpcServer implements Closeable {
   private final int port;
   private final ConcurrentMap<String, ClientInfo> pendingClients;
   private final RpcConfiguration config;
+
+  private String applicationId;
 
   public RpcServer(Map<String, String> mapConf) throws IOException, InterruptedException {
     this.config = new RpcConfiguration(mapConf);
@@ -147,6 +150,27 @@ public class RpcServer implements Closeable {
     }
   }
 
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
+  }
+
+  /**
+   * This function converts an application in form of a String into a ApplicationId.
+   *
+   * @param appIDStr The application id in form of a string
+   * @return the application id as an instance of ApplicationId class.
+   */
+  private static ApplicationId getApplicationIDFromString(String appIDStr) {
+    String[] parts = appIDStr.split("_");
+    if (parts.length < 3) {
+      throw new IllegalStateException("the application id found is not valid. application id: " + appIDStr);
+    }
+    long timestamp = Long.parseLong(parts[1]);
+    int id = Integer.parseInt(parts[2]);
+    return ApplicationId.newInstance(timestamp, id);
+  }
+
+
   /**
    * Tells the RPC server to expect a connection from a new client.
    *
@@ -209,6 +233,24 @@ public class RpcServer implements Closeable {
     if (!cinfo.promise.isDone()) {
       cinfo.promise.setFailure(new RuntimeException(
           String.format("Cancel client '%s'. Error: " + msg, clientId)));
+    }
+  }
+
+  /**
+   * Tells the RPC server to cancel the connection from an existing pending client.
+   *
+   * @param clientId The identifier for the client
+   * @param failure The error about why the connection should be canceled
+   */
+  public void cancelClient(final String clientId, final Throwable failure) {
+    final ClientInfo cinfo = pendingClients.remove(clientId);
+    if (cinfo == null) {
+      // Nothing to be done here.
+      return;
+    }
+    cinfo.timeoutFuture.cancel(true);
+    if (!cinfo.promise.isDone()) {
+      cinfo.promise.setFailure(failure);
     }
   }
 

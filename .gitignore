@@ -31,3 +31,6 @@ itests/hive-blobstore/src/test/resources/blobstore-conf.xml
 .DS_Store
 patchprocess
 standalone-metastore/src/gen/version
+*.tgz
+*.tar.gz
+*.jar

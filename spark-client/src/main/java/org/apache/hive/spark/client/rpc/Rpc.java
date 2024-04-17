@@ -19,6 +19,7 @@ package org.apache.hive.spark.client.rpc;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -312,6 +313,14 @@ public class Rpc implements Closeable {
   @VisibleForTesting
   Channel getChannel() {
     return channel;
+  }
+
+  /**
+   * Returns the "hostname:port" that the RPC is connected to
+   */
+  public String getRemoteAddress() {
+    InetSocketAddress remoteAddress = ((InetSocketAddress) this.channel.remoteAddress());
+    return remoteAddress.getHostName() + ":" + remoteAddress.getPort();
   }
 
   void setDispatcher(RpcDispatcher dispatcher) {

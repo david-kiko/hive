@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:mysql://localhost:3306/hive?createDatabaseIfNotExist=true</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.mysql.cj.jdbc.Driver</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>root</value>
+    </property>
+
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>!Qazxsw2</value>
+    </property>
+
+    <property>
+        <name>hive.server2.enable.doAs</name>
+        <value>FALSE</value>
+    </property>
+
+    <property>
+        <name>hive.log.dir</name>
+        <value>/Users/david/data/bigdata/hive/logs</value>
+    </property>
+
+    <property>
+        <name>spark.submit.deployModer</name>
+        <value>cluster</value>
+    </property>
+</configuration>

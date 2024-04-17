@@ -19,6 +19,7 @@
 package org.apache.hive.spark.client;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.io.File;
@@ -50,6 +51,8 @@ public class SparkClientUtilities {
 
   public static final String HIVE_KRYO_REG_NAME = "org.apache.hive.spark.HiveKryoRegistrator";
   private static final String HIVE_KRYO_REG_JAR_NAME = "hive-kryo-registrator";
+
+  private static final ImmutableList<String> ERROR_KEYWORDS = ImmutableList.of("error", "exception");
 
   /**
    * Add new elements to the classpath.
@@ -141,6 +144,10 @@ public class SparkClientUtilities {
         ("yarn".equals(master) && "cluster".equals(deployMode));
   }
 
+  public static boolean isKubernetesClusterMode(String master, String deployMode) {
+    return master.startsWith("k8s") && deployMode.equals("cluster");
+  }
+
   public static boolean isYarnClientMode(String master, String deployMode) {
     return "yarn-client".equals(master) ||
         ("yarn".equals(master) && "client".equals(deployMode));
@@ -202,5 +209,9 @@ public class SparkClientUtilities {
           new URLClassLoader(new URL[]{jar.toURI().toURL()}, loader);
       Thread.currentThread().setContextClassLoader(newLoader);
     }
+  }
+
+  public static boolean containsErrorKeyword(String line) {
+    return ERROR_KEYWORDS.stream().anyMatch(x -> org.apache.commons.lang3.StringUtils.containsIgnoreCase(line, x));
   }
 }
