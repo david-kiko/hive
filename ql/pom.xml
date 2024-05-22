@@ -86,6 +86,16 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-spark-client</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-runtime</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- inter-project -->
     <dependency>
@@ -156,7 +166,7 @@
     <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro-mapred</artifactId>
-      <classifier>hadoop2</classifier>
+<!--      <classifier>hadoop2</classifier>-->
       <version>${avro.version}</version>
       <exclusions>
         <exclusion>
@@ -337,7 +347,7 @@
     <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>${jackson.version}</version>
+        <version>${jackson-databind.version}</version>
     </dependency>
     <dependency>
       <groupId>org.datanucleus</groupId>
@@ -949,8 +959,9 @@
                   <include>javolution:javolution</include>
                   <include>com.google.protobuf:protobuf-java</include>
                   <include>io.airlift:aircompressor</include>
-                  <include>org.codehaus.jackson:jackson-core-asl</include>
-                  <include>org.codehaus.jackson:jackson-mapper-asl</include>
+                  <include>com.fasterxml.jackson.core:jackson-core</include>
+                  <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                  <include>com.fasterxml.jackson.core:jackson-databind</include>
                   <include>com.google.guava:guava</include>
                   <include>net.sf.opencsv:opencsv</include>
                   <include>org.apache.hive:hive-spark-client</include>
@@ -959,6 +970,8 @@
                   <include>org.apache.orc:orc-shims</include>
                   <include>org.apache.orc:orc-tools</include>
                   <include>joda-time:joda-time</include>
+                  <include>org.apache.calcite:*</include>
+                  <include>org.apache.calcite.avatica:avatica</include>
                 </includes>
               </artifactSet>
               <relocations>

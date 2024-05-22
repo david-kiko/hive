@@ -20,7 +20,7 @@
   <property>
     <!--DataNode将发送心跳到NameNode的端口-->
     <name>fs.defaultFS</name>
-    <value>hdfs://192.168.200.152:9000</value>
+    <value>hdfs://localsingle:9000</value>
   </property>
   <property>
     <!--临时文件存储目录，没有则新建-->

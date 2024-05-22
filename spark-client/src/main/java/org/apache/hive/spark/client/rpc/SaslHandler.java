@@ -55,33 +55,41 @@ abstract class SaslHandler extends SimpleChannelInboundHandler<Rpc.SaslMessage>
   @Override
   protected final void channelRead0(ChannelHandlerContext ctx, Rpc.SaslMessage msg)
       throws Exception {
-    LOG.debug("Handling SASL challenge message...");
+    LOG.info("Handling SASL challenge message...");
+    LOG.info("Handling SASL challenge message... {}", msg.toString());
     Rpc.SaslMessage response = update(msg);
     if (response != null) {
-      LOG.debug("Sending SASL challenge response...");
+      LOG.info("ok...");
+      LOG.info("Sending SASL challenge response...");
       hasAuthResponse = true;
       ctx.channel().writeAndFlush(response).sync();
     }
+    LOG.info("ook...");
 
     if (!isComplete()) {
+      LOG.info("oook...");
       return;
     }
+
+    LOG.info("ooook...");
 
     // If negotiation is complete, remove this handler from the pipeline, and register it with
     // the Kryo instance to handle encryption if needed.
     ctx.channel().pipeline().remove(this);
     String qop = getNegotiatedProperty(Sasl.QOP);
-    LOG.debug("SASL negotiation finished with QOP {}.", qop);
+    LOG.info("SASL negotiation finished with QOP {}.", qop);
     if (Rpc.SASL_AUTH_CONF.equals(qop)) {
       LOG.info("SASL confidentiality enabled.");
       kryo.setEncryptionHandler(this);
     } else {
+      LOG.info("ooooook...");
       if (requiresEncryption) {
         throw new SaslException("Encryption required, but SASL negotiation did not set it up.");
       }
       dispose();
     }
 
+    LOG.info("ooooooooook...");
     onComplete();
   }
 

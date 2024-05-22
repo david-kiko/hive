@@ -46,15 +46,18 @@ public final class RpcConfiguration {
   private static final Logger LOG = LoggerFactory.getLogger(RpcConfiguration.class);
 
   public static final ImmutableSet<String> HIVE_SPARK_RSC_CONFIGS = ImmutableSet.of(
+    HiveConf.ConfVars.SPARK_CLIENT_FUTURE_TIMEOUT.varname,
     HiveConf.ConfVars.SPARK_RPC_CLIENT_CONNECT_TIMEOUT.varname,
     HiveConf.ConfVars.SPARK_RPC_CLIENT_HANDSHAKE_TIMEOUT.varname,
     HiveConf.ConfVars.SPARK_RPC_CHANNEL_LOG_LEVEL.varname,
     HiveConf.ConfVars.SPARK_RPC_MAX_MESSAGE_SIZE.varname,
     HiveConf.ConfVars.SPARK_RPC_MAX_THREADS.varname,
     HiveConf.ConfVars.SPARK_RPC_SECRET_RANDOM_BITS.varname,
-    HiveConf.ConfVars.SPARK_RPC_SERVER_ADDRESS.varname
+    HiveConf.ConfVars.SPARK_RPC_SERVER_ADDRESS.varname,
+    HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname
   );
   public static final ImmutableSet<String> HIVE_SPARK_TIME_CONFIGS = ImmutableSet.of(
+    HiveConf.ConfVars.SPARK_CLIENT_FUTURE_TIMEOUT.varname,
     HiveConf.ConfVars.SPARK_RPC_CLIENT_CONNECT_TIMEOUT.varname,
     HiveConf.ConfVars.SPARK_RPC_CLIENT_HANDSHAKE_TIMEOUT.varname
   );
@@ -114,7 +117,8 @@ public final class RpcConfiguration {
         hiveHost = config.get(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST.varname);
       }
     }
-    return ServerUtils.getHostAddress(hiveHost).getHostName();
+    return hiveHost;
+    //return ServerUtils.getHostAddress(hiveHost).getHostName();
   }
 
   /**
@@ -124,7 +128,7 @@ public final class RpcConfiguration {
    * @exception IOException is thrown if the property is not configured properly
    */
   List<Integer> getServerPorts() throws IOException {
-    String errMsg = "Incorrect RPC server port configuration for HiveServer2";
+    String errMsg = "Malformed configuration value for " + HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname;
     String portString = config.get(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname);
     ArrayList<Integer> ports = new ArrayList<Integer>();
     try {
@@ -133,7 +137,7 @@ public final class RpcConfiguration {
           String[] range = portRange.split("-");
           if (range.length == 0 || range.length > 2
               || (range.length == 2 && Integer.valueOf(range[0]) > Integer.valueOf(range[1]))) {
-            throw new IOException(errMsg);
+            throw new IllegalArgumentException(errMsg);
           }
           if (range.length == 1) {
             ports.add(Integer.valueOf(range[0]));
@@ -149,7 +153,7 @@ public final class RpcConfiguration {
 
       return ports;
     } catch(NumberFormatException e) {
-      throw new IOException(errMsg);
+      throw new IllegalArgumentException(errMsg, e);
     }
   }
 

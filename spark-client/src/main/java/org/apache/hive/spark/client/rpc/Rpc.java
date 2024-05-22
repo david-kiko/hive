@@ -20,6 +20,7 @@ package org.apache.hive.spark.client.rpc;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -111,6 +112,7 @@ public class Rpc implements Closeable {
         .connect(host, port);
 
     final Promise<Rpc> promise = eloop.next().newPromise();
+
     final AtomicReference<Rpc> rpc = new AtomicReference<Rpc>();
 
     // Set up a timeout to undo everything.
@@ -128,13 +130,23 @@ public class Rpc implements Closeable {
     cf.addListener(new ChannelFutureListener() {
       @Override
       public void operationComplete(ChannelFuture cf) throws Exception {
+        LOG.info("hello d log level, reverting to default.");
         if (cf.isSuccess()) {
+          LOG.info("hello e log level, reverting to default.");
           SaslClientHandler saslHandler = new SaslClientHandler(rpcConf, clientId, promise,
             timeoutFuture, secret, dispatcher);
           Rpc rpc = createRpc(rpcConf, saslHandler, (SocketChannel) cf.channel(), eloop);
           saslHandler.rpc = rpc;
-          saslHandler.sendHello(cf.channel());
+          try {
+            LOG.info("hello f log level, reverting to default.");
+            saslHandler.sendHello(cf.channel());
+          } catch (Exception e) {
+            LOG.info(e.toString());
+            throw e;
+          }
+          LOG.info("hello g log level, reverting to default.");
         } else {
+          LOG.info("hello x log level, reverting to default.");
           promise.setFailure(cf.cause());
         }
       }
@@ -144,12 +156,16 @@ public class Rpc implements Closeable {
     promise.addListener(new GenericFutureListener<Promise<Rpc>>() {
       @Override
       public void operationComplete(Promise<Rpc> p) {
+        LOG.info("hello a log level, reverting to default.");
         if (p.isCancelled()) {
+          LOG.info("hello b log level, reverting to default.");
           cf.cancel(true);
         }
+        LOG.info("hello c log level, reverting to default.");
       }
     });
 
+    LOG.info("hello log level, reverting to default.");
     return promise;
   }
 
@@ -273,7 +289,8 @@ public class Rpc implements Closeable {
    */
   public <T> Future<T> call(final Object msg, Class<T> retType) {
     Preconditions.checkArgument(msg != null);
-    Preconditions.checkState(channel.isActive(), "RPC channel is closed.");
+    Preconditions.checkState(channel.isActive(), "Unable to send message " + msg +
+            " because the Remote Spark Driver - HiveServer2 connection has been closed.");
     try {
       final long id = rpcId.getAndIncrement();
       final Promise<T> promise = createPromise();
@@ -281,7 +298,8 @@ public class Rpc implements Closeable {
           @Override
           public void operationComplete(ChannelFuture cf) {
             if (!cf.isSuccess() && !promise.isDone()) {
-              LOG.warn("Failed to send RPC, closing connection.", cf.cause());
+              LOG.warn("Failed to send message '" + msg + "', closing Remote Spark Driver - " +
+                      "HiveServer2 connection.", cf.cause());
               promise.setFailure(cf.cause());
               dispatcher.discardRpc(id);
               close();
@@ -400,6 +418,13 @@ public class Rpc implements Closeable {
       this.payload = payload;
     }
 
+    @Override
+    public String toString() {
+      return "SaslMessage{" +
+              "clientId='" + clientId + '\'' +
+              ", payload=" + Arrays.toString(payload) +
+              '}';
+    }
   }
 
   private static class SaslClientHandler extends SaslHandler implements CallbackHandler {

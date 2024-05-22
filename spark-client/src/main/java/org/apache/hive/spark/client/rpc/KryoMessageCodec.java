@@ -23,7 +23,11 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.hive.spark.client.BaseProtocol;
+import org.apache.hive.spark.client.JobResultSerializer;
+
 import org.objenesis.strategy.StdInstantiatorStrategy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +35,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.ByteBufferInputStream;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+
 import com.google.common.base.Preconditions;
 
 import io.netty.buffer.ByteBuf;
@@ -60,6 +65,7 @@ class KryoMessageCodec extends ByteToMessageCodec<Object> {
         kryo.register(klass, REG_ID_BASE + count);
         count++;
       }
+      kryo.register(BaseProtocol.JobResult.class, new JobResultSerializer(), count);
       kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
       return kryo;
     }
@@ -75,7 +81,7 @@ class KryoMessageCodec extends ByteToMessageCodec<Object> {
 
   @Override
   protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out)
-      throws Exception {
+          throws Exception {
     if (in.readableBytes() < 4) {
       return;
     }
@@ -95,8 +101,8 @@ class KryoMessageCodec extends ByteToMessageCodec<Object> {
       Input kryoIn = new Input(new ByteBufferInputStream(nioBuffer));
 
       Object msg = kryos.get().readClassAndObject(kryoIn);
-      LOG.debug("Decoded message of type {} ({} bytes)",
-          msg != null ? msg.getClass().getName() : msg, msgSize);
+      LOG.trace("Decoded message of type {} ({} bytes)",
+              msg != null ? msg.getClass().getName() : msg, msgSize);
       out.add(msg);
     } finally {
       in.skipBytes(msgSize);
@@ -105,14 +111,14 @@ class KryoMessageCodec extends ByteToMessageCodec<Object> {
 
   @Override
   protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf buf)
-      throws Exception {
+          throws Exception {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     Output kryoOut = new Output(bytes);
     kryos.get().writeClassAndObject(kryoOut, msg);
     kryoOut.flush();
 
     byte[] msgData = maybeEncrypt(bytes.toByteArray());
-    LOG.debug("Encoded message of type {} ({} bytes)", msg.getClass().getName(), msgData.length);
+    LOG.trace("Encoded message of type {} ({} bytes)", msg.getClass().getName(), msgData.length);
     checkSize(msgData.length);
 
     buf.ensureWritable(msgData.length + 4);
@@ -131,7 +137,7 @@ class KryoMessageCodec extends ByteToMessageCodec<Object> {
   private void checkSize(int msgSize) {
     Preconditions.checkArgument(msgSize > 0, "Message size (%s bytes) must be positive.", msgSize);
     Preconditions.checkArgument(maxMessageSize <= 0 || msgSize <= maxMessageSize,
-        "Message (%s bytes) exceeds maximum allowed size (%s bytes).", msgSize, maxMessageSize);
+            "Message (%s bytes) exceeds maximum allowed size (%s bytes).", msgSize, maxMessageSize);
   }
 
   private byte[] maybeEncrypt(byte[] data) throws Exception {

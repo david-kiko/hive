@@ -59,6 +59,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import static org.apache.hive.spark.client.SparkClientUtilities.testIpAndPort;
+
 /**
  * Driver code for the Spark client library.
  */
@@ -122,12 +124,14 @@ public class RemoteDriver {
     }
 
     executor = Executors.newCachedThreadPool();
+    int timeOut = 3000;
+    boolean status = testIpAndPort(serverAddress, serverPort, timeOut);
 
-    LOG.info("Connecting to HiveServer2 address: {}:{}", serverAddress, serverPort);
+    LOG.info("Connecting to HiveServer2 address: {}:{}, status is {}", serverAddress, serverPort, status);
 
     for (Tuple2<String, String> e : conf.getAll()) {
       mapConf.put(e._1(), e._2());
-      LOG.debug("Remote Driver configured with: " + e._1() + "=" + e._2());
+      LOG.info("Remote Driver configured with: " + e._1() + "=" + e._2());
     }
 
     String clientId = mapConf.get(SparkClientFactory.CONF_CLIENT_ID);
@@ -148,9 +152,10 @@ public class RemoteDriver {
 
     // The RPC library takes care of timing out this.
     this.clientRpc = Rpc.createClient(mapConf, egroup, serverAddress, serverPort,
-      clientId, secret, protocol).get();
+        clientId, secret, protocol).get();
     this.running = true;
 
+    LOG.info("Hello3 to HiveServer2 address: {}:{}", serverAddress, serverPort);
     this.clientRpc.addListener(new Rpc.Listener() {
       @Override
       public void rpcClosed(Rpc rpc) {
@@ -163,6 +168,8 @@ public class RemoteDriver {
         return "Shutting Down Remote Spark Driver to HiveServer2 Connection";
       }
     });
+
+    LOG.info("Hello4 to HiveServer2 address: {}:{}", serverAddress, serverPort);
 
     try {
       JavaSparkContext sc = new JavaSparkContext(conf);

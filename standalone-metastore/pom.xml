@@ -71,9 +71,10 @@
     <dropwizard-metrics-hadoop-metrics2-reporter.version>0.1.2</dropwizard-metrics-hadoop-metrics2-reporter.version>
     <dropwizard.version>3.1.0</dropwizard.version>
     <guava.version>19.0</guava.version>
-    <hadoop.version>3.1.0</hadoop.version>
+    <hadoop.version>3.3.6</hadoop.version>
     <hikaricp.version>2.6.1</hikaricp.version>
-    <jackson.version>2.12.0</jackson.version>
+    <jackson.version>2.12.7</jackson.version>
+    <jackson-databind.version>2.12.7.1</jackson-databind.version>
     <javolution.version>5.5.1</javolution.version>
     <junit.version>4.11</junit.version>
     <libfb303.version>0.9.3</libfb303.version>
@@ -111,7 +112,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
+      <version>${jackson-databind.version}</version>
     </dependency>
     <dependency>
       <groupId>com.github.joshelser</groupId>
@@ -157,6 +158,12 @@
       <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-json</artifactId>
       <version>${dropwizard.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>javolution</groupId>
@@ -245,6 +252,10 @@
         <exclusion>
           <groupId>commmons-logging</groupId>
           <artifactId>commons-logging</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -629,7 +640,7 @@
             <configuration>
               <finalName>apache-hive-metastore-${project.version}</finalName>
               <descriptors>
-                <descriptor>src/assembly/bin.xml</descriptor>
+<!--                <descriptor>src/assembly/bin.xml</descriptor>-->
                 <descriptor>src/assembly/src.xml</descriptor>
               </descriptors>
               <tarLongFileMode>gnu</tarLongFileMode>

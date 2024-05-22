@@ -22,7 +22,7 @@ RUN sed -i -E 's#http://(deb|security).debian.org#http://mirrors.aliyun.com#g' /
     cp -f /tmp/pip.conf $HOME/.pip/ && \
     ln -s /usr/bin/python3 /usr/bin/python
 
-ARG HADOOP_VERSION="3.1.1"
+ARG HADOOP_VERSION="3.3.6"
 ARG HIVE_VERSION="3.1.3"
 ARG SPARK_VERSION="3.3.5-SNAPSHOT"
 ENV SPARK_HOME="/opt/spark"
@@ -49,8 +49,9 @@ ENV PATH="/opt/hadoop/bin:/opt/hive/bin:${PATH}:/opt/spark/bin:${PATH}"
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN touch 1 && rm 1
 COPY apache-hive-3.1.3-bin.tar.gz ./
-COPY hadoop-3.1.1.tar.gz ./
+COPY hadoop-${HADOOP_VERSION}.tar.gz ./
 
 RUN tar -xzf apache-hive-3.1.3-bin.tar.gz -C /opt && \
     rm apache-hive-3.1.3-bin.tar.gz && \
@@ -59,7 +60,6 @@ RUN tar -xzf apache-hive-3.1.3-bin.tar.gz -C /opt && \
     mv hadoop-${HADOOP_VERSION} /opt/hadoop && \
     rm hadoop-${HADOOP_VERSION}.tar.gz
 
-RUN touch 6 && rm 6
 COPY mysql-connector-java-8.0.15.jar /opt/hive/lib/
 COPY config/hive-site.xml /opt/hive/conf
 COPY config/hive-log4j2.properties /opt/hive/conf

@@ -21,6 +21,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -57,7 +58,11 @@ import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.concurrent.ScheduledFuture;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.api.records.ApplicationReport;
+import org.apache.hadoop.yarn.api.records.YarnApplicationState;
+import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.common.classification.InterfaceAudience;
@@ -82,8 +87,13 @@ public class RpcServer implements Closeable {
 
   private String applicationId;
 
-  public RpcServer(Map<String, String> mapConf) throws IOException, InterruptedException {
+  private final HiveConf hiveConf;
+  private final Map<String, String> sparkConf;
+
+  public RpcServer(Map<String, String> mapConf, HiveConf hiveConf) throws IOException, InterruptedException {
     this.config = new RpcConfiguration(mapConf);
+    this.sparkConf = mapConf;
+    this.hiveConf = hiveConf;
     this.group = new NioEventLoopGroup(
         this.config.getRpcThreadCount(),
         new ThreadFactoryBuilder()
@@ -146,8 +156,8 @@ public class RpcServer implements Closeable {
           // Retry the next port
         }
       }
-      throw new IOException("No available ports from configured RPC Server ports for HiveServer2");
-    }
+      throw new IOException("Remote Spark Driver RPC Server cannot bind to any of the configured ports: "
+              + Arrays.toString(config.getServerPorts().toArray()));    }
   }
 
   public void setApplicationId(String applicationId) {
@@ -168,6 +178,61 @@ public class RpcServer implements Closeable {
     long timestamp = Long.parseLong(parts[1]);
     int id = Integer.parseInt(parts[2]);
     return ApplicationId.newInstance(timestamp, id);
+  }
+
+  public static boolean isApplicationAccepted(HiveConf conf, String applicationId) {
+    if (applicationId == null) {
+      return false;
+    }
+    YarnClient yarnClient = null;
+    try {
+      ApplicationId appId = getApplicationIDFromString(applicationId);
+      yarnClient = YarnClient.createYarnClient();
+      yarnClient.init(conf);
+      yarnClient.start();
+      ApplicationReport appReport = yarnClient.getApplicationReport(appId);
+      return appReport != null && appReport.getYarnApplicationState() == YarnApplicationState.ACCEPTED;
+    } catch (Exception ex) {
+      LOG.error("Failed getting application status for: " + applicationId + ": " + ex, ex);
+      return false;
+    } finally {
+      if (yarnClient != null) {
+        try {
+          yarnClient.stop();
+        } catch (Exception ex) {
+          LOG.error("Failed to stop yarn client: " + ex, ex);
+        }
+      }
+    }
+  }
+
+  static class YarnApplicationStateFinder {
+    public boolean isApplicationAccepted(HiveConf conf, String applicationId) {
+      if (applicationId == null) {
+        return false;
+      }
+      YarnClient yarnClient = null;
+      try {
+        LOG.info("Trying to find " + applicationId);
+        ApplicationId appId = getApplicationIDFromString(applicationId);
+        yarnClient = YarnClient.createYarnClient();
+        yarnClient.init(conf);
+        yarnClient.start();
+        ApplicationReport appReport = yarnClient.getApplicationReport(appId);
+        return appReport != null && appReport.getYarnApplicationState() == YarnApplicationState.ACCEPTED;
+      } catch (Exception ex) {
+        LOG.error("Failed getting application status for: " + applicationId + ": " + ex, ex);
+        return false;
+      } finally {
+        if (yarnClient != null) {
+          try {
+            yarnClient.stop();
+          } catch (Exception ex) {
+            LOG.error("Failed to stop yarn client: " + ex, ex);
+          }
+        }
+      }
+    }
   }
 
 
@@ -193,25 +258,35 @@ public class RpcServer implements Closeable {
     Runnable timeout = new Runnable() {
       @Override
       public void run() {
-        promise.setFailure(new TimeoutException("Timed out waiting for client connection."));
+        promise.setFailure(new TimeoutException("Timed out waiting for client connection abcdefgg."));
       }
     };
+
+    LOG.info("timeout is...{}", clientId, clientTimeoutMs);
     ScheduledFuture<?> timeoutFuture = group.schedule(timeout,
         clientTimeoutMs,
         TimeUnit.MILLISECONDS);
     final ClientInfo client = new ClientInfo(clientId, promise, secret, serverDispatcher,
         timeoutFuture);
+
+    LOG.info("wocao...{},{}", clientId, client.toString());
     if (pendingClients.putIfAbsent(clientId, client) != null) {
       throw new IllegalStateException(
           String.format("Client '%s' already registered.", clientId));
+    } else {
+      LOG.info("wocao1...{},{}", clientId, client.toString());
     }
+    LOG.info("wocao2...{},{}", clientId, client.toString());
 
     promise.addListener(new GenericFutureListener<Promise<Rpc>>() {
       @Override
       public void operationComplete(Promise<Rpc> p) {
+        LOG.info("operationComplete 1...");
         if (!p.isSuccess()) {
+          LOG.info("operationComplete 2...");
           pendingClients.remove(clientId);
         }
+        LOG.info("operationComplete 3...");
       }
     });
 

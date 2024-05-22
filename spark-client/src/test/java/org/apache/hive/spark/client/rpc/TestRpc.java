@@ -63,9 +63,12 @@ public class TestRpc {
   private static final Map<String, String> emptyConfig =
       ImmutableMap.of(HiveConf.ConfVars.SPARK_RPC_CHANNEL_LOG_LEVEL.varname, "DEBUG");
 
+  private HiveConf hiveConf;
+
   @Before
   public void setUp() {
     closeables = Lists.newArrayList();
+    hiveConf = new HiveConf();
   }
 
   @After
@@ -97,7 +100,7 @@ public class TestRpc {
 
   @Test
   public void testClientServer() throws Exception {
-    RpcServer server = autoClose(new RpcServer(emptyConfig));
+    RpcServer server = autoClose(new RpcServer(emptyConfig, hiveConf));
     Rpc[] rpcs = createRpcConnection(server);
     Rpc serverRpc = rpcs[0];
     Rpc client = rpcs[1];
@@ -134,25 +137,25 @@ public class TestRpc {
 
     // Test if rpc_server_address is configured
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_ADDRESS.varname, hostAddress);
-    RpcServer server1 = autoClose(new RpcServer(config));
+    RpcServer server1 = autoClose(new RpcServer(config, hiveConf));
     assertTrue("Host address should match the expected one", server1.getAddress() == hostAddress);
 
     // Test if rpc_server_address is not configured but HS2 server host is configured
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_ADDRESS.varname, "");
     config.put(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST.varname, hostAddress);
-    RpcServer server2 = autoClose(new RpcServer(config));
+    RpcServer server2 = autoClose(new RpcServer(config, hiveConf));
     assertTrue("Host address should match the expected one", server2.getAddress() == hostAddress);
 
     // Test if both are not configured
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_ADDRESS.varname, "");
     config.put(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST.varname, "");
-    RpcServer server3 = autoClose(new RpcServer(config));
+    RpcServer server3 = autoClose(new RpcServer(config, hiveConf));
     assertTrue("Host address should match the expected one", server3.getAddress() == InetAddress.getLocalHost().getHostName());
   }
 
   @Test
   public void testBadHello() throws Exception {
-    RpcServer server = autoClose(new RpcServer(emptyConfig));
+    RpcServer server = autoClose(new RpcServer(emptyConfig, hiveConf));
 
     Future<Rpc> serverRpcFuture = server.registerClient("client", "newClient",
         new TestDispatcher());
@@ -178,24 +181,24 @@ public class TestRpc {
   public void testServerPort() throws Exception {
     Map<String, String> config = new HashMap<String, String>();
 
-    RpcServer server0 = new RpcServer(config);
+    RpcServer server0 = new RpcServer(config, hiveConf);
     assertTrue("Empty port range should return a random valid port: " + server0.getPort(), server0.getPort() >= 0);
     IOUtils.closeQuietly(server0);
 
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname, "49152-49222,49223,49224-49333");
-    RpcServer server1 = new RpcServer(config);
+    RpcServer server1 = new RpcServer(config, hiveConf);
     assertTrue("Port should be within configured port range:" + server1.getPort(), server1.getPort() >= 49152 && server1.getPort() <= 49333);
     IOUtils.closeQuietly(server1);
 
     int expectedPort = 65535;
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname, String.valueOf(expectedPort));
-    RpcServer server2 = new RpcServer(config);
+    RpcServer server2 = new RpcServer(config, hiveConf);
     assertTrue("Port should match configured one: " + server2.getPort(), server2.getPort() == expectedPort);
     IOUtils.closeQuietly(server2);
 
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname, "49552-49222,49223,49224-49333");
     try {
-      autoClose(new RpcServer(config));
+      autoClose(new RpcServer(config, hiveConf));
       assertTrue("Invalid port range should throw an exception", false); // Should not reach here
     } catch(IllegalArgumentException e) {
       assertEquals(
@@ -206,14 +209,14 @@ public class TestRpc {
     // Retry logic
     expectedPort = 65535;
     config.put(HiveConf.ConfVars.SPARK_RPC_SERVER_PORT.varname, String.valueOf(expectedPort) + ",21-23");
-    RpcServer server3 = new RpcServer(config);
+    RpcServer server3 = new RpcServer(config, hiveConf);
     assertTrue("Port should match configured one:" + server3.getPort(), server3.getPort() == expectedPort);
     IOUtils.closeQuietly(server3);
   }
 
   @Test
   public void testCloseListener() throws Exception {
-    RpcServer server = autoClose(new RpcServer(emptyConfig));
+    RpcServer server = autoClose(new RpcServer(emptyConfig, hiveConf));
     Rpc[] rpcs = createRpcConnection(server);
     Rpc client = rpcs[1];
 
@@ -232,7 +235,7 @@ public class TestRpc {
 
   @Test
   public void testNotDeserializableRpc() throws Exception {
-    RpcServer server = autoClose(new RpcServer(emptyConfig));
+    RpcServer server = autoClose(new RpcServer(emptyConfig, hiveConf));
     Rpc[] rpcs = createRpcConnection(server);
     Rpc client = rpcs[1];
 
@@ -250,7 +253,7 @@ public class TestRpc {
       .putAll(emptyConfig)
       .put(RpcConfiguration.RPC_SASL_OPT_PREFIX + "qop", Rpc.SASL_AUTH_CONF)
       .build();
-    RpcServer server = autoClose(new RpcServer(eConf));
+    RpcServer server = autoClose(new RpcServer(eConf, hiveConf));
     Rpc[] rpcs = createRpcConnection(server, eConf, null);
     Rpc client = rpcs[1];
 
@@ -265,7 +268,7 @@ public class TestRpc {
     Map<String, String> conf = ImmutableMap.<String,String>builder()
       .putAll(emptyConfig)
       .build();
-    RpcServer server = autoClose(new RpcServer(conf));
+    RpcServer server = autoClose(new RpcServer(conf, hiveConf));
     String secret = server.createSecret();
 
     try {
@@ -289,7 +292,7 @@ public class TestRpc {
 
   @Test
   public void testRpcServerMultiThread() throws Exception {
-    final RpcServer server = autoClose(new RpcServer(emptyConfig));
+    final RpcServer server = autoClose(new RpcServer(emptyConfig, hiveConf));
     final String msg = "Hello World!";
     Callable<String> callable = () -> {
       Rpc[] rpcs = createRpcConnection(server, emptyConfig, UUID.randomUUID().toString());

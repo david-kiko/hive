@@ -81,7 +81,7 @@ public class SparkSessionManagerImpl implements SparkSessionManager {
           LOG.info("Setting up the session manager.");
           Map<String, String> conf = HiveSparkClientFactory.initiateSparkConf(hiveConf, null);
           try {
-            SparkClientFactory.initialize(conf);
+            SparkClientFactory.initialize(conf, hiveConf);
             inited = true;
           } catch (IOException e) {
             throw new HiveException("Error initializing SparkClientFactory", e);

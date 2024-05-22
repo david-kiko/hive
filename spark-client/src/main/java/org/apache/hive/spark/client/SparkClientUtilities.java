@@ -24,9 +24,8 @@ import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.io.IOException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -213,5 +212,24 @@ public class SparkClientUtilities {
 
   public static boolean containsErrorKeyword(String line) {
     return ERROR_KEYWORDS.stream().anyMatch(x -> org.apache.commons.lang3.StringUtils.containsIgnoreCase(line, x));
+  }
+
+  public static boolean testIpAndPort(String host, int port, int timeout) {
+    Socket s = new Socket();
+    boolean status = false;
+    try {
+      s.connect(new InetSocketAddress(host, port), timeout);
+      LOG.info("ip及端口访问正常");
+      status = true;
+    } catch (IOException e) {
+      LOG.info(host + ":" + port + "无法访问！");
+    } finally {
+      try {
+        s.close();
+      } catch (IOException ex) {
+        LOG.info("关闭socket异常" + ex);
+      }
+    }
+    return status;
   }
 }

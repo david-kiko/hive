@@ -4,7 +4,7 @@
 <configuration>
     <property>
         <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:mysql://192.168.200.152:3306/hive?createDatabaseIfNotExist=true</value>
+        <value>jdbc:mysql://localsingle:3306/hive?createDatabaseIfNotExist=true&amp;useSSL=false</value>
     </property>
 
     <property>
@@ -39,7 +39,47 @@
 
     <property>
         <name>hive.metastore.uris</name>
-        <value>thrift://192.168.200.152:9083</value>
+        <value>thrift://localsingle:9083</value>
         <description>URI for client to contact metastore server</description>
+    </property>
+
+    <property>
+        <name>hive.spark.client.future.timeout</name>
+        <value>60000</value>
+    </property>
+
+    <property>
+        <name>hive.spark.client.rpc.server.port</name>
+        <value>10010-10020</value>
+    </property>
+
+    <property>
+        <name>hive.spark.client.rpc.server.address</name>
+        <value>hive-server2-svc.default.svc.cluster.local</value>
+    </property>
+
+    <property>
+        <name>hive.server2.thrift.bind.host</name>
+        <value>hive-server2-svc.default.svc.cluster.local</value>
+    </property>
+
+    <property>
+        <name>hive.spark.client.channel.log.level</name>
+        <value>TRACE</value>
+    </property>
+
+    <property>
+        <name>hive.spark.client.connect.timeout</name>
+        <value>360000</value>
+    </property>
+
+    <property>
+        <name>hive.spark.client.server.connect.timeout</name>
+        <value>360000</value>
+    </property>
+
+    <property>
+        <name>hive.server2.authentication</name>
+        <value>NOSASL</value>
     </property>
 </configuration>

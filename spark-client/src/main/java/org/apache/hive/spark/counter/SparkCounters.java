@@ -79,7 +79,7 @@ public class SparkCounters implements Serializable {
     SparkCounter counter = getGroup(groupName).getCounter(counterName);
     if (counter == null) {
       LOG.error(
-        String.format("counter[%s, %s] has not initialized before.", groupName, counterName));
+              String.format("counter[%s, %s] has not initialized before.", groupName, counterName));
     } else {
       counter.increment(value);
     }
@@ -89,7 +89,7 @@ public class SparkCounters implements Serializable {
     SparkCounter counter = getGroup(groupName).getCounter(counterName);
     if (counter == null) {
       LOG.error(
-        String.format("counter[%s, %s] has not initialized before.", groupName, counterName));
+              String.format("counter[%s, %s] has not initialized before.", groupName, counterName));
       return 0;
     } else {
       return counter.getValue();
@@ -131,10 +131,10 @@ public class SparkCounters implements Serializable {
           String counterName = counterEntry.getKey();
           SparkCounter counter = counterEntry.getValue();
           sb.append("\t")
-            .append(counterName)
-            .append(": ")
-            .append(counter.getValue())
-            .append("\n");
+                  .append(counterName)
+                  .append(": ")
+                  .append(counter.getValue())
+                  .append("\n");
         }
       }
     }

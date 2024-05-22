@@ -39,9 +39,9 @@ public class SparkCounterGroup implements Serializable {
   }
 
   public SparkCounterGroup(
-      String groupName,
-      String groupDisplayName,
-      JavaSparkContext javaSparkContext) {
+          String groupName,
+          String groupDisplayName,
+          JavaSparkContext javaSparkContext) {
     this.groupName = groupName;
     this.groupDisplayName = groupDisplayName;
     this.javaSparkContext = javaSparkContext;

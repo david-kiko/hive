@@ -98,12 +98,27 @@ class SparkClientImpl implements SparkClient {
     this.jobs = Maps.newConcurrentMap();
 
     String secret = rpcServer.createSecret();
+    LOG.info("start before.....");
     this.driverFuture = startDriver(rpcServer, sessionid, secret);
+    LOG.info("start after......");
     this.protocol = new ClientProtocol();
 
     try {
       // The RPC server will take care of timeouts here.
+      boolean flag = true;
+      while (flag) {
+        LOG.info("wake up ok before .....");
+        try {
+          Thread.sleep(5000);
+        } catch (InterruptedException e) {
+          LOG.info("wake ok up .....");
+        }
+        LOG.info("wake up ok after .....");
+        flag = false;
+      }
+      LOG.info("register before......");
       this.driverRpc = rpcServer.registerClient(sessionid, secret, protocol).get();
+      LOG.info("register after......");
     } catch (Throwable e) {
       String errorMsg = null;
       if (e.getCause() instanceof TimeoutException) {
@@ -552,9 +567,9 @@ class SparkClientImpl implements SparkClient {
     final List<String> childErrorLog = Collections.synchronizedList(new ArrayList<String>());
     final LogRedirector.LogSourceCallback callback = () -> {return isAlive;};
 
-    LogRedirector.redirect("RemoteDriver-stdout-redir-" + threadName,
+    LogRedirector.redirect("spark-submit-stdout-redir-" + threadName,
         new LogRedirector(child.getInputStream(), LOG, childOutLog, callback));
-    LogRedirector.redirect("RemoteDriver-stderr-redir-" + threadName,
+    LogRedirector.redirect("spark-submit-stderr-redir-" + threadName,
         new LogRedirector(child.getErrorStream(), LOG, childErrorLog, callback));
 
     runnable = () -> {
@@ -601,9 +616,10 @@ class SparkClientImpl implements SparkClient {
           List<String> errorMessages = new ArrayList<>();
           synchronized (childErrorLog) {
             for (String line : childErrorLog) {
-              if (containsErrorKeyword(line)) {
-                errorMessages.add("\"" + line + "\"");
-              }
+//              if (containsErrorKeyword(line)) {
+//                errorMessages.add("\"" + line + "\"");
+//              }
+              errorMessages.add("\"" + line + "\"");
             }
           }
 
@@ -715,16 +731,16 @@ class SparkClientImpl implements SparkClient {
     private void handle(ChannelHandlerContext ctx, JobResult msg) {
       JobHandleImpl<?> handle = jobs.remove(msg.id);
       if (handle != null) {
-        LOG.info("Received result for {}", msg.id);
+        LOG.debug("Received result for client job {}", msg.id);
         handle.setSparkCounters(msg.sparkCounters);
-        Throwable error = msg.error != null ? new SparkException(msg.error) : null;
+        Throwable error = msg.error;
         if (error == null) {
           handle.setSuccess(msg.result);
         } else {
           handle.setFailure(error);
         }
       } else {
-        LOG.warn("Received result for unknown job {}", msg.id);
+        LOG.warn("Received result for unknown client job {}", msg.id);
       }
     }
 
