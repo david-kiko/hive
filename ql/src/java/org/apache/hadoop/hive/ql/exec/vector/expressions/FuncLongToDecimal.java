@@ -62,6 +62,7 @@ public abstract class FuncLongToDecimal extends VectorExpression {
 
     // We do not need to do a column reset since we are carefully changing the output.
     outputColVector.isRepeating = false;
+    boolean[] outputIsNull = outputColVector.isNull;
 
     // we must determine the input type, and if it is of the decimal type, assign it directly to the output.
     if (batch.cols[inputColumn] instanceof DecimalColumnVector) {
@@ -71,6 +72,21 @@ public abstract class FuncLongToDecimal extends VectorExpression {
       }
 
       DecimalColumnVector inputDecimalColVector = (DecimalColumnVector) batch.cols[inputColumn];
+      boolean[] inputDecimalIsNull = inputDecimalColVector.isNull;
+
+      if (inputDecimalColVector.isRepeating) {
+        if (inputDecimalColVector.noNulls || !inputDecimalIsNull[0]) {
+          // Set isNull before call in case it changes it mind.
+          outputIsNull[0] = false;
+          outputColVector.set(0, inputDecimalColVector.vector[0]);
+        } else {
+          outputIsNull[0] = true;
+          outputColVector.noNulls = false;
+        }
+        outputColVector.isRepeating = true;
+        return;
+      }
+
       for(int j = 0; j != n; j++) {
         final int i = sel[j];
         outputColVector.set(i, inputDecimalColVector.vector[i]);
@@ -81,7 +97,6 @@ public abstract class FuncLongToDecimal extends VectorExpression {
     LongColumnVector inputColVector = (LongColumnVector) batch.cols[inputColumn];
 
     boolean[] inputIsNull = inputColVector.isNull;
-    boolean[] outputIsNull = outputColVector.isNull;
 
     if (n == 0) {
       // Nothing to do
