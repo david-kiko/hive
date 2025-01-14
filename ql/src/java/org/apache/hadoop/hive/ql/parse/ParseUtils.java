@@ -175,8 +175,13 @@ public final class ParseUtils {
       throw new SemanticException("Bad params for type char");
     }
 
+    // the length of char should not be less than 1
     String lengthStr = node.getChild(0).getText();
-    return TypeInfoFactory.getCharTypeInfo(Integer.parseInt(lengthStr));
+    int length = Integer.parseInt(lengthStr);
+    if (length < 1) {
+      length = 1;
+    }
+    return TypeInfoFactory.getCharTypeInfo(length);
   }
 
   static int getIndex(String[] list, String elem) {

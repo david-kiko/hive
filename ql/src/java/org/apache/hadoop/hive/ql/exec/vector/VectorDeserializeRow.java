@@ -680,7 +680,8 @@ public final class VectorDeserializeRow<T extends DeserializeRead> {
       }
       break;
     case DECIMAL:
-      if (field.getDataTypePhysicalVariation() == DataTypePhysicalVariation.DECIMAL_64) {
+      // if vector is instance of Decimal64ColumnVector,should be convert to Decimal64ColumnVector instead of DecimalColumnVector
+      if (field.getDataTypePhysicalVariation() == DataTypePhysicalVariation.DECIMAL_64 || colVector instanceof Decimal64ColumnVector) {
         ((Decimal64ColumnVector) colVector).vector[batchIndex] = deserializeRead.currentDecimal64;
       } else {
         // The DecimalColumnVector set method will quickly copy the deserialized decimal writable fields.

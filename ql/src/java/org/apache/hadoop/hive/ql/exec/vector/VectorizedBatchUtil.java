@@ -574,11 +574,10 @@ public class VectorizedBatchUtil {
     return typeInfoList.toArray(new TypeInfo[0]);
   }
 
+  // Decimal64ColumnVector is LongColumnVector's subclass, so move Decimal64ColumnVector's logic code after LongColumnVector
   public static ColumnVector makeLikeColumnVector(ColumnVector source
                                         ) throws HiveException{
-    if (source instanceof LongColumnVector) {
-      return new LongColumnVector(((LongColumnVector) source).vector.length);
-    } else if (source instanceof DoubleColumnVector) {
+    if (source instanceof DoubleColumnVector) {
       return new DoubleColumnVector(((DoubleColumnVector) source).vector.length);
     } else if (source instanceof BytesColumnVector) {
       return new BytesColumnVector(((BytesColumnVector) source).vector.length);
@@ -592,6 +591,8 @@ public class VectorizedBatchUtil {
         return new DecimalColumnVector(dec64ColVector.vector.length,
             dec64ColVector.precision,
             dec64ColVector.scale);
+    } else if (source instanceof LongColumnVector) {
+      return new LongColumnVector(((LongColumnVector) source).vector.length);
     } else if (source instanceof TimestampColumnVector) {
       return new TimestampColumnVector(((TimestampColumnVector) source).getLength());
     } else if (source instanceof IntervalDayTimeColumnVector) {
