@@ -29,10 +29,9 @@ import org.apache.hadoop.hive.serde2.io.DateWritableV2;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hive.common.util.DateParser;
 
 import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 public class VectorUDFDateDiffColCol extends VectorExpression {
@@ -41,8 +40,8 @@ public class VectorUDFDateDiffColCol extends VectorExpression {
   private final int colNum1;
   private final int colNum2;
 
-  private transient final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
   private transient final Date date = new Date(0);
+  private final DateParser dateParser = new DateParser();
 
   // Transient members initialized by transientInit method.
   private transient LongColumnVector dateVector1;
@@ -214,14 +213,15 @@ public class VectorUDFDateDiffColCol extends VectorExpression {
     if (input.isRepeating) {
       if (input.noNulls || !input.isNull[0]) {
         String string = new String(input.vector[0], input.start[0], input.length[0]);
-        try {
-          date.setTime(formatter.parse(string).getTime());
-          output.vector[0] = DateWritableV2.dateToDays(date);
-          output.isNull[0] = false;
-        } catch (ParseException e) {
+        //use hive date instead
+        org.apache.hadoop.hive.common.type.Date hiveDate = dateParser.parseDate(string);
+        if (hiveDate != null) {
+          output.vector[0] = hiveDate.toEpochDay();
+        } else {
           output.isNull[0] = true;
           output.noNulls = false;
         }
+
       } else {
         output.isNull[0] = true;
         output.noNulls = false;
@@ -293,10 +293,11 @@ public class VectorUDFDateDiffColCol extends VectorExpression {
 
   private void setDays(BytesColumnVector input, LongColumnVector output, int i) {
     String string = new String(input.vector[i], input.start[i], input.length[i]);
-    try {
-      date.setTime(formatter.parse(string).getTime());
-      output.vector[i] = DateWritableV2.dateToDays(date);
-    } catch (ParseException e) {
+    //use hive date instead
+    org.apache.hadoop.hive.common.type.Date hiveDate = dateParser.parseDate(string);
+    if (hiveDate != null) {
+      output.vector[i] = hiveDate.toEpochDay();
+    } else {
       output.isNull[i] = true;
       output.noNulls = false;
     }
