@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hive.ql.optimizer.listbucketingpruner;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
@@ -74,7 +75,7 @@ public class LBPartitionProcFactory extends PrunerOperatorFactory {
 
   }
 
-  public static NodeProcessor getFilterProc() {
+  public static SemanticNodeProcessor getFilterProc() {
     return new LBPRPartitionFilterPruner();
   }
 

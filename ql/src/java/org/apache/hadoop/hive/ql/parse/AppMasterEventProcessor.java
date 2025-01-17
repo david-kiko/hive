@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.AppMasterEventOperator;
@@ -35,7 +36,7 @@ import org.apache.hadoop.hive.ql.plan.DynamicPruningEventDesc;
  * processing.
  *
  */
-public class AppMasterEventProcessor implements NodeProcessor {
+public class AppMasterEventProcessor implements SemanticNodeProcessor {
 
   static final private Logger LOG = LoggerFactory.getLogger(AppMasterEventProcessor.class.getName());
 

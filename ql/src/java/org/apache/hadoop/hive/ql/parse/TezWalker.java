@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.Node;
+import org.apache.hadoop.hive.ql.lib.SemanticDispatcher;
 
 /**
  * Walks the operator tree in DFS fashion.
@@ -35,7 +36,7 @@ public class TezWalker extends DefaultGraphWalker {
    * @param disp
    *          the dispatcher to be called for each node visited
    */
-  public TezWalker(Dispatcher disp) {
+  public TezWalker(SemanticDispatcher disp) {
     super(disp);
   }
 

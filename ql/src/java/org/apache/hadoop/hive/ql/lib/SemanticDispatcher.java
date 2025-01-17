@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.hadoop.hive.ql.lib;
 
 import java.util.Stack;
@@ -22,24 +23,26 @@ import java.util.Stack;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
- * CompositeProcessor. Holds a list of node processors to be fired by the same
- * rule.
- *
+ * Dispatcher interface for Operators Used in operator graph walking to dispatch
+ * process/visitor functions for operators.
  */
-public class CompositeProcessor implements SemanticNodeProcessor {
+public interface SemanticDispatcher extends Dispatcher {
 
-  NodeProcessor[] procs;
+    /**
+     * Dispatcher function.
+     *
+     * @param nd
+     *          operator to process.
+     * @param stack
+     *          operator stack to process.
+     * @param nodeOutputs
+     *          The argument list of outputs from processing other nodes that are
+     *          passed to this dispatcher from the walker.
+     * @return Object The return object from the processing call.
+     * @throws SemanticException
+     */
+    @Override
+    Object dispatch(Node nd, Stack<Node> stack, Object... nodeOutputs)
+            throws SemanticException;
 
-  public CompositeProcessor(NodeProcessor...nodeProcessors) {
-    procs = nodeProcessors;
-  }
-
-  @Override
-  public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx, Object... nodeOutputs)
-      throws SemanticException {
-    for (NodeProcessor proc: procs) {
-      proc.process(nd, stack, procCtx, nodeOutputs);
-    }
-    return null;
-  }
 }

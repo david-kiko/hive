@@ -30,15 +30,7 @@ import org.apache.hadoop.hive.ql.exec.LimitOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.OperatorUtils;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
@@ -92,7 +84,7 @@ public class LimitPushdownOptimizer extends Transform {
 
   @Override
   public ParseContext transform(ParseContext pctx) throws SemanticException {
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1",
         ReduceSinkOperator.getOperatorName() + "%" +
         ".*" +
@@ -105,7 +97,7 @@ public class LimitPushdownOptimizer extends Transform {
         new TopNPropagator());
 
     LimitPushdownContext context = new LimitPushdownContext(pctx.getConf());
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, context);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, context);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     List<Node> topNodes = new ArrayList<Node>(pctx.getTopOps().values());
@@ -113,7 +105,7 @@ public class LimitPushdownOptimizer extends Transform {
     return pctx;
   }
 
-  private static class TopNReducer implements NodeProcessor {
+  private static class TopNReducer implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack,
@@ -150,7 +142,7 @@ public class LimitPushdownOptimizer extends Transform {
     }
   }
 
-  private static class TopNPropagator implements NodeProcessor {
+  private static class TopNPropagator implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack,

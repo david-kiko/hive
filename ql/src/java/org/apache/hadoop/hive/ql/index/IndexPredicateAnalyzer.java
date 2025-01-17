@@ -28,14 +28,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
@@ -141,8 +134,8 @@ public class IndexPredicateAnalyzer {
     ExprNodeDesc predicate,
     final List<IndexSearchCondition> searchConditions) {
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
-    NodeProcessor nodeProcessor = new NodeProcessor() {
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
+    SemanticNodeProcessor nodeProcessor = new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack,
         NodeProcessorCtx procCtx, Object... nodeOutputs)
@@ -163,7 +156,7 @@ public class IndexPredicateAnalyzer {
       }
     };
 
-    Dispatcher disp = new DefaultRuleDispatcher(
+    SemanticDispatcher disp = new DefaultRuleDispatcher(
       nodeProcessor, opRules, null);
     GraphWalker ogw = new DefaultGraphWalker(disp);
     ArrayList<Node> topNodes = new ArrayList<Node>();

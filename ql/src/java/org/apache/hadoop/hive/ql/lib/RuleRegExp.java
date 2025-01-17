@@ -33,14 +33,14 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  * Rule interface for Nodes Used in Node dispatching to dispatch process/visitor
  * functions for Nodes.
  */
-public class RuleRegExp implements Rule {
+public class RuleRegExp implements SemanticRule {
 
   private final String ruleName;
   private final Pattern patternWithWildCardChar;
   private final String patternWithoutWildCardChar;
   private String[] patternORWildChar;
   private static final Set<Character> wildCards = new HashSet<Character>(Arrays.asList(
-    '[', '^', '$', '*', ']', '+', '|', '(', '\\', '.', '?', ')', '&'));
+          '[', '^', '$', '*', ']', '+', '|', '(', '\\', '.', '?', ')', '&'));
 
   /**
    * The function iterates through the list of wild card characters and sees if
@@ -90,10 +90,10 @@ public class RuleRegExp implements Rule {
 
   /**
    * The rule specified by the regular expression. Note that, the regular
-   * expression is specified in terms of Node name. For eg: TS.*RS -> means
+   * expression is specified in terms of Node name. For eg: TS.*RS -&gt; means
    * TableScan Node followed by anything any number of times followed by
    * ReduceSink
-   * 
+   *
    * @param ruleName
    *          name of the rule
    * @param regExp
@@ -104,9 +104,9 @@ public class RuleRegExp implements Rule {
 
     if (patternHasWildCardChar(regExp)) {
       if (patternHasOnlyWildCardChar(regExp, '|')) {
-          this.patternWithWildCardChar = null;
-          this.patternWithoutWildCardChar = null;
-          this.patternORWildChar = regExp.split("\\|");
+        this.patternWithWildCardChar = null;
+        this.patternWithoutWildCardChar = null;
+        this.patternORWildChar = regExp.split("\\|");
       } else {
         this.patternWithWildCardChar = Pattern.compile(regExp);
         this.patternWithoutWildCardChar = null;
@@ -209,7 +209,7 @@ public class RuleRegExp implements Rule {
             break;
           }
         }
-        
+
       }
     }
     return -1;
@@ -286,9 +286,9 @@ public class RuleRegExp implements Rule {
     // 2. patternWithWildCardChar and patternWithoutWildCardChar are both not nulls.
     // This is an internal error and we should not let this happen, so throw an exception.
     throw new SemanticException (
-      "Rule pattern is invalid for " + getName() + " : patternWithWildCardChar = " +
-      patternWithWildCardChar + " patternWithoutWildCardChar = " +
-      patternWithoutWildCardChar);
+            "Rule pattern is invalid for " + getName() + " : patternWithWildCardChar = " +
+                    patternWithWildCardChar + " patternWithoutWildCardChar = " +
+                    patternWithoutWildCardChar);
   }
 
   /**

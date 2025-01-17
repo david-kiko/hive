@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -47,7 +48,7 @@ import static org.apache.hadoop.hive.ql.plan.ReduceSinkDesc.ReducerTraits.FIXED;
  * SetReducerParallelism determines how many reducers should
  * be run for a given reduce sink.
  */
-public class SetReducerParallelism implements NodeProcessor {
+public class SetReducerParallelism implements SemanticNodeProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(SetReducerParallelism.class.getName());
 

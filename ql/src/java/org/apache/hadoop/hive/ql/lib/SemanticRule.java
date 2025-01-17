@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.hadoop.hive.ql.lib;
 
 import java.util.Stack;
@@ -22,24 +23,22 @@ import java.util.Stack;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
- * CompositeProcessor. Holds a list of node processors to be fired by the same
- * rule.
- *
+ * Rule interface for Operators Used in operator dispatching to dispatch
+ * process/visitor functions for operators.
  */
-public class CompositeProcessor implements SemanticNodeProcessor {
+public interface SemanticRule extends Rule {
 
-  NodeProcessor[] procs;
+    /**
+     * @return the cost of the rule - the lower the cost, the better the rule
+     *         matches
+     * @throws SemanticException
+     */
+    @Override
+    int cost(Stack<Node> stack) throws SemanticException;
 
-  public CompositeProcessor(NodeProcessor...nodeProcessors) {
-    procs = nodeProcessors;
-  }
-
-  @Override
-  public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx, Object... nodeOutputs)
-      throws SemanticException {
-    for (NodeProcessor proc: procs) {
-      proc.process(nd, stack, procCtx, nodeOutputs);
-    }
-    return null;
-  }
+    /**
+     * @return the name of the rule - may be useful for debugging
+     */
+    @Override
+    String getName();
 }

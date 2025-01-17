@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.optimizer.GenMRProcContext.GenMRUnionCtx;
 import org.apache.hadoop.hive.ql.optimizer.GenMRProcContext.GenMapRedCtx;
 import org.apache.hadoop.hive.ql.optimizer.unionproc.UnionProcContext;
@@ -47,7 +48,7 @@ import org.apache.hadoop.hive.ql.plan.TableDesc;
 /**
  * Processor for the rule - TableScan followed by Union.
  */
-public class GenMRUnion1 implements NodeProcessor {
+public class GenMRUnion1 implements SemanticNodeProcessor {
 
   public GenMRUnion1() {
   }

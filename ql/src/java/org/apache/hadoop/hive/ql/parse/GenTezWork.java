@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.optimizer.GenMapRedUtils;
 import org.apache.hadoop.hive.ql.optimizer.ReduceSinkMapJoinProc;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * a new execution unit.) and break the operators into work
  * and tasks along the way.
  */
-public class GenTezWork implements NodeProcessor {
+public class GenTezWork implements SemanticNodeProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(GenTezWork.class.getName());
 

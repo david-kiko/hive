@@ -41,15 +41,7 @@ import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.Utilities.ReduceField;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.RecordIdentifier;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
@@ -88,14 +80,14 @@ public class SortedDynPartitionOptimizer extends Transform {
 
     // create a walker which walks the tree in a DFS manner while maintaining the
     // operator stack. The dispatcher generates the plan from the operator tree
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
 
     String FS = FileSinkOperator.getOperatorName() + "%";
 
     opRules.put(new RuleRegExp("Sorted Dynamic Partition", FS), getSortDynPartProc(pCtx));
 
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
-    GraphWalker ogw = new DefaultGraphWalker(disp);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
+    SemanticGraphWalker ogw = new DefaultGraphWalker(disp);
 
     ArrayList<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(pCtx.getTopOps().values());
@@ -104,11 +96,11 @@ public class SortedDynPartitionOptimizer extends Transform {
     return pCtx;
   }
 
-  private NodeProcessor getSortDynPartProc(ParseContext pCtx) {
+  private SemanticNodeProcessor getSortDynPartProc(ParseContext pCtx) {
     return new SortedDynamicPartitionProc(pCtx);
   }
 
-  class SortedDynamicPartitionProc implements NodeProcessor {
+  class SortedDynamicPartitionProc implements SemanticNodeProcessor {
 
     private final Logger LOG = LoggerFactory.getLogger(SortedDynPartitionOptimizer.class);
     protected ParseContext parseCtx;
@@ -246,6 +238,7 @@ public class SortedDynPartitionOptimizer extends Transform {
       // Create ReduceSink operator
       ReduceSinkOperator rsOp = getReduceSinkOp(partitionPositions, sortPositions, sortOrder, sortNullOrder,
           allRSCols, bucketColumns, numBuckets, fsParent, fsOp.getConf().getWriteType());
+      rsOp.getConf().setBucketingVersion(fsOp.getConf().getBucketingVersion());
 
       List<ExprNodeDesc> descs = new ArrayList<ExprNodeDesc>(allRSCols.size());
       List<String> colNames = new ArrayList<String>();

@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.optimizer;
 
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -37,7 +38,7 @@ import org.apache.hadoop.hive.ql.plan.DynamicPruningEventDesc;
  * If we expect the number of keys for dynamic pruning to be too large we
  * disable it.
  */
-public class RemoveDynamicPruningBySize implements NodeProcessor {
+public class RemoveDynamicPruningBySize implements SemanticNodeProcessor {
 
   static final private Logger LOG = LoggerFactory.getLogger(RemoveDynamicPruningBySize.class.getName());
 

@@ -122,7 +122,7 @@ public class FileSinkDesc extends AbstractOperatorDesc implements IStatsGatherDe
       Long mmWriteId, boolean isMmCtas, boolean isInsertOverwrite) {
 
     this.dirName = dirName;
-    this.tableInfo = tableInfo;
+    setTableInfo(tableInfo);
     this.compressed = compressed;
     this.destTableId = destTableId;
     this.multiFileSpray = multiFileSpray;
@@ -142,7 +142,7 @@ public class FileSinkDesc extends AbstractOperatorDesc implements IStatsGatherDe
       final boolean compressed) {
 
     this.dirName = dirName;
-    this.tableInfo = tableInfo;
+    setTableInfo(tableInfo);
     this.compressed = compressed;
     destTableId = 0;
     this.multiFileSpray = false;
@@ -226,6 +226,7 @@ public class FileSinkDesc extends AbstractOperatorDesc implements IStatsGatherDe
 
   public void setTableInfo(final TableDesc tableInfo) {
     this.tableInfo = tableInfo;
+    bucketingVersion = tableInfo.getBucketingVersion();
   }
 
   @Explain(displayName = "compressed")
@@ -236,6 +237,11 @@ public class FileSinkDesc extends AbstractOperatorDesc implements IStatsGatherDe
 
   public void setCompressed(boolean compressed) {
     this.compressed = compressed;
+  }
+
+  @Explain(displayName = "bucketingVersion", explainLevels = { Level.EXTENDED })
+  public int getBucketingVersionForExplain() {
+    return getBucketingVersion();
   }
 
   @Explain(displayName = "GlobalTableId", explainLevels = { Level.EXTENDED })

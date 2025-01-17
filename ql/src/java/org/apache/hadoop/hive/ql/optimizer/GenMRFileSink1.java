@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
@@ -48,7 +49,7 @@ import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 /**
  * Processor for the rule - table scan followed by reduce sink.
  */
-public class GenMRFileSink1 implements NodeProcessor {
+public class GenMRFileSink1 implements SemanticNodeProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(GenMRFileSink1.class.getName());
 

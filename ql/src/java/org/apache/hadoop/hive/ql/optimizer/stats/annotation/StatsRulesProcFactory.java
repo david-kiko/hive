@@ -51,6 +51,7 @@ import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.optimizer.signature.OpTreeSignature;
@@ -126,7 +127,7 @@ public class StatsRulesProcFactory {
    * available then number of rows will be estimated from file size and average row size (computed
    * from schema).
    */
-  public static class TableScanStatsRule extends DefaultStatsRule implements NodeProcessor {
+  public static class TableScanStatsRule extends DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -172,7 +173,7 @@ public class StatsRulesProcFactory {
    * "Database Systems: The Complete Book" by Garcia-Molina et. al.</i>
    * </p>
    */
-  public static class SelectStatsRule extends DefaultStatsRule implements NodeProcessor {
+  public static class SelectStatsRule extends DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -264,7 +265,7 @@ public class StatsRulesProcFactory {
    * "Database Systems: The Complete Book" by Garcia-Molina et. al.</i>
    * </p>
    */
-  public static class FilterStatsRule extends DefaultStatsRule implements NodeProcessor {
+  public static class FilterStatsRule extends DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -1150,7 +1151,7 @@ public class StatsRulesProcFactory {
    * "Database Systems: The Complete Book" by Garcia-Molina et. al.</i>
    * </p>
    */
-  public static class GroupByStatsRule extends DefaultStatsRule implements NodeProcessor {
+  public static class GroupByStatsRule extends DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -1574,7 +1575,7 @@ public class StatsRulesProcFactory {
    * "Database Systems: The Complete Book" by Garcia-Molina et. al.</i>
    * </p>
    */
-  public static class JoinStatsRule extends FilterStatsRule implements NodeProcessor {
+  public static class JoinStatsRule extends FilterStatsRule implements SemanticNodeProcessor {
 
 
     @Override
@@ -2389,7 +2390,7 @@ public class StatsRulesProcFactory {
   /**
    * LIMIT operator changes the number of rows and thereby the data size.
    */
-  public static class LimitStatsRule extends DefaultStatsRule implements NodeProcessor {
+  public static class LimitStatsRule extends DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -2444,7 +2445,7 @@ public class StatsRulesProcFactory {
    * from the default stats which just aggregates and passes along the statistics
    * without actually renaming based on output schema of the operator.
    */
-  public static class ReduceSinkStatsRule extends DefaultStatsRule implements NodeProcessor {
+  public static class ReduceSinkStatsRule extends DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx, Object... nodeOutputs) throws SemanticException {
@@ -2501,7 +2502,7 @@ public class StatsRulesProcFactory {
   /**
    * Default rule is to aggregate the statistics from all its parent operators.
    */
-  public static class DefaultStatsRule implements NodeProcessor {
+  public static class DefaultStatsRule implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -2556,35 +2557,35 @@ public class StatsRulesProcFactory {
 
   }
 
-  public static NodeProcessor getTableScanRule() {
+  public static SemanticNodeProcessor getTableScanRule() {
     return new TableScanStatsRule();
   }
 
-  public static NodeProcessor getSelectRule() {
+  public static SemanticNodeProcessor getSelectRule() {
     return new SelectStatsRule();
   }
 
-  public static NodeProcessor getFilterRule() {
+  public static SemanticNodeProcessor getFilterRule() {
     return new FilterStatsRule();
   }
 
-  public static NodeProcessor getGroupByRule() {
+  public static SemanticNodeProcessor getGroupByRule() {
     return new GroupByStatsRule();
   }
 
-  public static NodeProcessor getJoinRule() {
+  public static SemanticNodeProcessor getJoinRule() {
     return new JoinStatsRule();
   }
 
-  public static NodeProcessor getLimitRule() {
+  public static SemanticNodeProcessor getLimitRule() {
     return new LimitStatsRule();
   }
 
-  public static NodeProcessor getReduceSinkRule() {
+  public static SemanticNodeProcessor getReduceSinkRule() {
     return new ReduceSinkStatsRule();
   }
 
-  public static NodeProcessor getDefaultRule() {
+  public static SemanticNodeProcessor getDefaultRule() {
     return new DefaultStatsRule();
   }
 

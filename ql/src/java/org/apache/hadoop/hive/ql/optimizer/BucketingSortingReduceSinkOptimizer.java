@@ -36,15 +36,7 @@ import org.apache.hadoop.hive.ql.exec.SMBMapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
@@ -80,7 +72,7 @@ public class BucketingSortingReduceSinkOptimizer extends Transform {
   @Override
   public ParseContext transform(ParseContext pctx) throws SemanticException {
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
 
     // process reduce sink added by hive.enforce.bucketing or hive.enforce.sorting
     opRules.put(new RuleRegExp("R1",
@@ -90,7 +82,7 @@ public class BucketingSortingReduceSinkOptimizer extends Transform {
         getBucketSortReduceSinkProc(pctx));
 
     // The dispatcher fires the processor corresponding to the closest matching rule
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, null);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, null);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     // Create a list of top nodes
@@ -101,8 +93,8 @@ public class BucketingSortingReduceSinkOptimizer extends Transform {
     return pctx;
   }
 
-  private NodeProcessor getDefaultProc() {
-    return new NodeProcessor() {
+  private SemanticNodeProcessor getDefaultProc() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack,
           NodeProcessorCtx procCtx, Object... nodeOutputs) throws SemanticException {
@@ -111,7 +103,7 @@ public class BucketingSortingReduceSinkOptimizer extends Transform {
     };
   }
 
-  private NodeProcessor getBucketSortReduceSinkProc(ParseContext pctx) {
+  private SemanticNodeProcessor getBucketSortReduceSinkProc(ParseContext pctx) {
     return new BucketSortReduceSinkProcessor(pctx);
   }
 
@@ -119,7 +111,7 @@ public class BucketingSortingReduceSinkOptimizer extends Transform {
    * BucketSortReduceSinkProcessor.
    *
    */
-  public class BucketSortReduceSinkProcessor implements NodeProcessor {
+  public class BucketSortReduceSinkProcessor implements SemanticNodeProcessor {
     private final Logger LOG = LoggerFactory.getLogger(BucketSortReduceSinkProcessor.class);
     protected ParseContext pGraphContext;
 

@@ -47,15 +47,7 @@ import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentLengthException;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentTypeException;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.ExpressionWalker;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory;
@@ -192,7 +184,7 @@ public class TypeCheckProcFactory {
     // create a walker which walks the tree in a DFS manner while maintaining
     // the operator stack. The dispatcher
     // generates the plan from the operator tree
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
 
     opRules.put(new RuleRegExp("R1", HiveParser.TOK_NULL + "%"),
         tf.getNullExprProcessor());
@@ -230,7 +222,7 @@ public class TypeCheckProcFactory {
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(tf.getDefaultExprProcessor(),
+    SemanticDispatcher disp = new DefaultRuleDispatcher(tf.getDefaultExprProcessor(),
         opRules, tcCtx);
     GraphWalker ogw = new ExpressionWalker(disp);
 
@@ -259,7 +251,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for processing NULL expression.
    */
-  public static class NullExprProcessor implements NodeProcessor {
+  public static class NullExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -292,7 +284,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for processing numeric constants.
    */
-  public static class NumExprProcessor implements NodeProcessor {
+  public static class NumExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -382,7 +374,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for processing string constants.
    */
-  public static class StrExprProcessor implements NodeProcessor {
+  public static class StrExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -440,7 +432,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for boolean constants.
    */
-  public static class BoolExprProcessor implements NodeProcessor {
+  public static class BoolExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -486,7 +478,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for date constants.
    */
-  public static class DateTimeExprProcessor implements NodeProcessor {
+  public static class DateTimeExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -538,7 +530,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for interval constants.
    */
-  public static class IntervalExprProcessor implements NodeProcessor {
+  public static class IntervalExprProcessor implements SemanticNodeProcessor {
 
     private static final BigDecimal NANOS_PER_SEC_BD = new BigDecimal(DateUtils.NANOS_PER_SEC);
     @Override
@@ -620,7 +612,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for table columns.
    */
-  public static class ColumnExprProcessor implements NodeProcessor {
+  public static class ColumnExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -809,7 +801,7 @@ public class TypeCheckProcFactory {
   /**
    * The default processor for typechecking.
    */
-  public static class DefaultExprProcessor implements NodeProcessor {
+  public static class DefaultExprProcessor implements SemanticNodeProcessor {
 
     static HashMap<Integer, String> specialUnaryOperatorTextHashMap;
     static HashMap<Integer, String> conversionFunctionTextHashMap;
@@ -1495,7 +1487,7 @@ public class TypeCheckProcFactory {
   /**
    * Processor for subquery expressions..
    */
-  public static class SubQueryExprProcessor implements NodeProcessor {
+  public static class SubQueryExprProcessor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,

@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.optimizer.GenMRProcContext.GenMapRedCtx;
@@ -48,7 +49,7 @@ import org.apache.hadoop.mapred.InputFormat;
 /**
  * Processor for the rule - table scan.
  */
-public class GenMRTableScan1 implements NodeProcessor {
+public class GenMRTableScan1 implements SemanticNodeProcessor {
   public GenMRTableScan1() {
   }
 

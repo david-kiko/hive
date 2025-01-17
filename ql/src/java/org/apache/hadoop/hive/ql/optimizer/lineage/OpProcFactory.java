@@ -51,10 +51,7 @@ import org.apache.hadoop.hive.ql.hooks.LineageInfo.Dependency;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo.DependencyType;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo.Predicate;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo.TableAliasInfo;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Utils;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -86,7 +83,7 @@ public class OpProcFactory {
   /**
    * Processor for Script and UDTF Operators.
    */
-  public static class TransformLineage extends DefaultLineage implements NodeProcessor {
+  public static class TransformLineage extends DefaultLineage implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -145,7 +142,7 @@ public class OpProcFactory {
   /**
    * Processor for TableScan Operator. This actually creates the base column mappings.
    */
-  public static class TableScanLineage extends DefaultLineage implements NodeProcessor {
+  public static class TableScanLineage extends DefaultLineage implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -202,7 +199,7 @@ public class OpProcFactory {
   /**
    * Processor for Join Operator.
    */
-  public static class JoinLineage extends DefaultLineage implements NodeProcessor {
+  public static class JoinLineage extends DefaultLineage implements SemanticNodeProcessor {
 
     private final HashMap<Node, Object> outputMap = new HashMap<Node, Object>();
 
@@ -306,7 +303,7 @@ public class OpProcFactory {
   /**
    * Processor for Join Operator.
    */
-  public static class LateralViewJoinLineage extends DefaultLineage implements NodeProcessor {
+  public static class LateralViewJoinLineage extends DefaultLineage implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
@@ -351,7 +348,7 @@ public class OpProcFactory {
   /**
    * Processor for Select operator.
    */
-  public static class SelectLineage extends DefaultLineage implements NodeProcessor {
+  public static class SelectLineage extends DefaultLineage implements SemanticNodeProcessor {
 
     private final HashMap<Node, Object> outputMap = new HashMap<Node, Object>();
 
@@ -407,7 +404,7 @@ public class OpProcFactory {
   /**
    * Processor for GroupBy operator.
    */
-  public static class GroupByLineage extends DefaultLineage implements NodeProcessor {
+  public static class GroupByLineage extends DefaultLineage implements SemanticNodeProcessor {
 
     private final HashMap<Node, Object> outputMap = new HashMap<Node, Object>();
 
@@ -532,7 +529,7 @@ public class OpProcFactory {
    * In this case we call mergeDependency as opposed to putDependency
    * in order to account for visits from different parents.
    */
-  public static class UnionLineage extends DefaultLineage implements NodeProcessor {
+  public static class UnionLineage extends DefaultLineage implements SemanticNodeProcessor {
 
     @SuppressWarnings("unchecked")
     @Override
@@ -569,7 +566,7 @@ public class OpProcFactory {
   /**
    * ReduceSink processor.
    */
-  public static class ReduceSinkLineage implements NodeProcessor {
+  public static class ReduceSinkLineage implements SemanticNodeProcessor {
 
     private final HashMap<Node, Object> outputMap = new HashMap<Node, Object>();
 
@@ -640,7 +637,7 @@ public class OpProcFactory {
   /**
    * Filter processor.
    */
-  public static class FilterLineage implements NodeProcessor {
+  public static class FilterLineage implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -681,7 +678,7 @@ public class OpProcFactory {
    * Default processor. This basically passes the input dependencies as such
    * to the output dependencies.
    */
-  public static class DefaultLineage implements NodeProcessor {
+  public static class DefaultLineage implements SemanticNodeProcessor {
 
     @SuppressWarnings("unchecked")
     @Override
@@ -710,43 +707,43 @@ public class OpProcFactory {
     }
   }
 
-  public static NodeProcessor getJoinProc() {
+  public static SemanticNodeProcessor getJoinProc() {
     return new JoinLineage();
   }
 
-  public static NodeProcessor getLateralViewJoinProc() {
+  public static SemanticNodeProcessor getLateralViewJoinProc() {
     return new LateralViewJoinLineage();
   }
 
-  public static NodeProcessor getTSProc() {
+  public static SemanticNodeProcessor getTSProc() {
     return new TableScanLineage();
   }
 
-  public static NodeProcessor getTransformProc() {
+  public static SemanticNodeProcessor getTransformProc() {
     return new TransformLineage();
   }
 
-  public static NodeProcessor getSelProc() {
+  public static SemanticNodeProcessor getSelProc() {
     return new SelectLineage();
   }
 
-  public static NodeProcessor getGroupByProc() {
+  public static SemanticNodeProcessor getGroupByProc() {
     return new GroupByLineage();
   }
 
-  public static NodeProcessor getUnionProc() {
+  public static SemanticNodeProcessor getUnionProc() {
     return new UnionLineage();
   }
 
-  public static NodeProcessor getReduceSinkProc() {
+  public static SemanticNodeProcessor getReduceSinkProc() {
     return new ReduceSinkLineage();
   }
 
-  public static NodeProcessor getDefaultProc() {
+  public static SemanticNodeProcessor getDefaultProc() {
     return new DefaultLineage();
   }
 
-  public static NodeProcessor getFilterProc() {
+  public static SemanticNodeProcessor getFilterProc() {
     return new FilterLineage();
   }
 }

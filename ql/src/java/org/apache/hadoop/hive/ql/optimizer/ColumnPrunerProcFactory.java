@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.AbstractMapJoinOperator;
@@ -99,7 +100,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * Node Processor for Column Pruning on Filter Operators.
    */
-  public static class ColumnPrunerFilterProc implements NodeProcessor {
+  public static class ColumnPrunerFilterProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -130,7 +131,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * Node Processor for Column Pruning on Group By Operators.
    */
-  public static class ColumnPrunerGroupByProc implements NodeProcessor {
+  public static class ColumnPrunerGroupByProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -220,7 +221,7 @@ public final class ColumnPrunerProcFactory {
     return new ColumnPrunerGroupByProc();
   }
 
-  public static class ColumnPrunerScriptProc implements NodeProcessor {
+  public static class ColumnPrunerScriptProc implements SemanticNodeProcessor {
     @Override
     @SuppressWarnings("unchecked")
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
@@ -453,7 +454,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Default Node Processor for Column Pruning.
    */
-  public static class ColumnPrunerDefaultProc implements NodeProcessor {
+  public static class ColumnPrunerDefaultProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -478,7 +479,7 @@ public final class ColumnPrunerProcFactory {
    * The Node Processor for Column Pruning on Table Scan Operators. It will
    * store needed columns in tableScanDesc.
    */
-  public static class ColumnPrunerTableScanProc implements NodeProcessor {
+  public static class ColumnPrunerTableScanProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -566,7 +567,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Node Processor for Column Pruning on Reduce Sink Operators.
    */
-  public static class ColumnPrunerReduceSinkProc implements NodeProcessor {
+  public static class ColumnPrunerReduceSinkProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -646,7 +647,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Node Processor for Column Pruning on Lateral View Join Operators.
    */
-  public static class ColumnPrunerLateralViewJoinProc implements NodeProcessor {
+  public static class ColumnPrunerLateralViewJoinProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -742,7 +743,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Node Processor for Column Pruning on Select Operators.
    */
-  public static class ColumnPrunerSelectProc implements NodeProcessor {
+  public static class ColumnPrunerSelectProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -970,7 +971,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Node Processor for Column Pruning on Join Operators.
    */
-  public static class ColumnPrunerJoinProc implements NodeProcessor {
+  public static class ColumnPrunerJoinProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -993,7 +994,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Node Processor for Column Pruning on Map Join Operators.
    */
-  public static class ColumnPrunerMapJoinProc implements NodeProcessor {
+  public static class ColumnPrunerMapJoinProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
@@ -1016,7 +1017,7 @@ public final class ColumnPrunerProcFactory {
   /**
    * The Node Processor for Column Pruning on Union Operators.
    */
-  public static class ColumnPrunerUnionProc implements NodeProcessor {
+  public static class ColumnPrunerUnionProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx, Object... nodeOutputs)
         throws SemanticException {

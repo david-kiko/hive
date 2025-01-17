@@ -51,6 +51,7 @@ import org.apache.hadoop.hive.ql.exec.TezDummyStoreOperator;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.optimizer.physical.LlapClusterStateForCompile;
 import org.apache.hadoop.hive.ql.parse.GenTezUtils;
 import org.apache.hadoop.hive.ql.parse.OptimizeTezProcContext;
@@ -84,7 +85,7 @@ import com.google.common.math.DoubleMath;
  * converted (e.g.: full outer joins cannot be handled as map joins) as well
  * as memory restrictions (one side of the join has to fit into memory).
  */
-public class ConvertJoinMapJoin implements NodeProcessor {
+public class ConvertJoinMapJoin implements SemanticNodeProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConvertJoinMapJoin.class.getName());
   private float hashTableLoadFactor;

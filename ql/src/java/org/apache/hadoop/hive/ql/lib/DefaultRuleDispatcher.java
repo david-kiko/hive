@@ -28,15 +28,15 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  * rules with the dispatcher, and the processor corresponding to closest
  * matching rule is fired.
  */
-public class DefaultRuleDispatcher implements Dispatcher {
+public class DefaultRuleDispatcher implements SemanticDispatcher {
 
-  private final Map<Rule, NodeProcessor> procRules;
+  private final Map<SemanticRule, SemanticNodeProcessor> procRules;
   private final NodeProcessorCtx procCtx;
-  private final NodeProcessor defaultProc;
+  private final SemanticNodeProcessor defaultProc;
 
   /**
    * Constructor.
-   * 
+   *
    * @param defaultProc
    *          default processor to be fired if no rule matches
    * @param rules
@@ -44,8 +44,8 @@ public class DefaultRuleDispatcher implements Dispatcher {
    * @param procCtx
    *          operator processor context, which is opaque to the dispatcher
    */
-  public DefaultRuleDispatcher(NodeProcessor defaultProc,
-      Map<Rule, NodeProcessor> rules, NodeProcessorCtx procCtx) {
+  public DefaultRuleDispatcher(SemanticNodeProcessor defaultProc,
+                               Map<SemanticRule, SemanticNodeProcessor> rules, NodeProcessorCtx procCtx) {
     this.defaultProc = defaultProc;
     procRules = rules;
     this.procCtx = procCtx;
@@ -53,7 +53,7 @@ public class DefaultRuleDispatcher implements Dispatcher {
 
   /**
    * Dispatcher function.
-   * 
+   *
    * @param nd
    *          operator to process
    * @param ndStack
@@ -62,13 +62,13 @@ public class DefaultRuleDispatcher implements Dispatcher {
    */
   @Override
   public Object dispatch(Node nd, Stack<Node> ndStack, Object... nodeOutputs)
-      throws SemanticException {
+          throws SemanticException {
 
     // find the firing rule
     // find the rule from the stack specified
-    Rule rule = null;
+    SemanticRule rule = null;
     int minCost = Integer.MAX_VALUE;
-    for (Rule r : procRules.keySet()) {
+    for (SemanticRule r : procRules.keySet()) {
       int cost = r.cost(ndStack);
       if ((cost >= 0) && (cost <= minCost)) {
         minCost = cost;
@@ -76,7 +76,7 @@ public class DefaultRuleDispatcher implements Dispatcher {
       }
     }
 
-    NodeProcessor proc;
+    SemanticNodeProcessor proc;
 
     if (rule == null) {
       proc = defaultProc;

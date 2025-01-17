@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.common.ObjectPair;
@@ -58,7 +59,7 @@ import com.google.common.base.Preconditions;
  *
  * Cloned from GenTezWork.
  */
-public class GenSparkWork implements NodeProcessor {
+public class GenSparkWork implements SemanticNodeProcessor {
   static final private Logger LOG = LoggerFactory.getLogger(GenSparkWork.class.getName());
 
   // instance of shared utils

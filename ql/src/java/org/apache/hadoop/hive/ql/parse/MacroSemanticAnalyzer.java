@@ -29,6 +29,7 @@ import java.util.Stack;
 import java.util.LinkedHashSet;
 
 import org.apache.hadoop.hive.metastore.Warehouse;
+import org.apache.hadoop.hive.ql.lib.SemanticDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -98,7 +99,7 @@ public class MacroSemanticAnalyzer extends BaseSemanticAnalyzer {
        * Walk down expression to see which arguments are actually used.
        */
       Node expression = (Node) ast.getChild(2);
-      PreOrderWalker walker = new PreOrderWalker(new Dispatcher() {
+      PreOrderWalker walker = new PreOrderWalker(new SemanticDispatcher() {
         @Override
         public Object dispatch(Node nd, Stack<Node> stack, Object... nodeOutputs)
             throws SemanticException {

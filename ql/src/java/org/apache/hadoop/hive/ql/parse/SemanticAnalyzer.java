@@ -115,10 +115,7 @@ import org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.io.NullRowsInputFormat;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 import org.apache.hadoop.hive.ql.lockmgr.HiveTxnManager;
 import org.apache.hadoop.hive.ql.lockmgr.LockException;
@@ -2589,7 +2586,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             ctx.getViewTokenRewriteStream(viewFullyQualifiedName),
             ctx, db, tabNameToTabObject, ignoredTokens);
       }
-      Dispatcher nodeOriginDispatcher = new Dispatcher() {
+      SemanticDispatcher nodeOriginDispatcher = new SemanticDispatcher() {
         @Override
         public Object dispatch(Node nd, java.util.Stack<Node> stack,
                                Object... nodeOutputs) {
@@ -11034,8 +11031,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         tsDesc.setOpProps(properties);
       }
 
-      // Set the bucketing Version
-      top.setBucketingVersion(tsDesc.getTableMetadata().getBucketingVersion());
     } else {
       rwsch = opParseCtx.get(top).getRowResolver();
       top.setChildOperators(null);

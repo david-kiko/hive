@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.ql.optimizer;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.ql.exec.OperatorUtils;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -40,7 +41,7 @@ import org.apache.hadoop.hive.ql.parse.spark.SparkPartitionPruningSinkOperator;
  *
  * Cloned from RemoveDynamicPruningBySize
  */
-public class SparkRemoveDynamicPruning implements NodeProcessor {
+public class SparkRemoveDynamicPruning implements SemanticNodeProcessor {
 
   static final private Logger LOG =
       LoggerFactory.getLogger(SparkRemoveDynamicPruning.class.getName());

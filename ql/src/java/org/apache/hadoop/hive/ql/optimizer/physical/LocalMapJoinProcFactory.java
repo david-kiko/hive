@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -35,15 +36,6 @@ import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.OperatorFactory;
 import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.optimizer.physical.MapJoinResolver.LocalMapJoinProcCtx;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
@@ -64,16 +56,16 @@ import org.apache.hadoop.hive.ql.plan.TableDesc;
 public final class LocalMapJoinProcFactory {
   private static final Logger LOG = LoggerFactory.getLogger(LocalMapJoinProcFactory.class);
 
-  public static NodeProcessor getJoinProc() {
+  public static SemanticNodeProcessor getJoinProc() {
     return new LocalMapJoinProcessor();
   }
 
-  public static NodeProcessor getGroupByProc() {
+  public static SemanticNodeProcessor getGroupByProc() {
     return new MapJoinFollowedByGroupByProcessor();
   }
 
-  public static NodeProcessor getDefaultProc() {
-    return new NodeProcessor() {
+  public static SemanticNodeProcessor getDefaultProc() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
           Object... nodeOutputs) throws SemanticException {
@@ -86,7 +78,7 @@ public final class LocalMapJoinProcFactory {
    * MapJoinFollowByProcessor.
    *
    */
-  public static class MapJoinFollowedByGroupByProcessor implements NodeProcessor {
+  public static class MapJoinFollowedByGroupByProcessor implements SemanticNodeProcessor {
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx, Object... nodeOutputs)
         throws SemanticException {
       LocalMapJoinProcCtx context = (LocalMapJoinProcCtx) ctx;
@@ -106,7 +98,7 @@ public final class LocalMapJoinProcFactory {
    * LocalMapJoinProcessor.
    *
    */
-  public static class LocalMapJoinProcessor implements NodeProcessor {
+  public static class LocalMapJoinProcessor implements SemanticNodeProcessor {
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx, Object... nodeOutputs)
         throws SemanticException {
       LocalMapJoinProcCtx context = (LocalMapJoinProcCtx) ctx;
@@ -252,12 +244,12 @@ public final class LocalMapJoinProcFactory {
     public void hasGroupBy(Operator<? extends OperatorDesc> mapJoinOp,
         LocalMapJoinProcCtx localMapJoinProcCtx) throws Exception {
       List<Operator<? extends OperatorDesc>> childOps = mapJoinOp.getChildOperators();
-      Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+      Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
       opRules.put(new RuleRegExp("R1", GroupByOperator.getOperatorName() + "%"),
         LocalMapJoinProcFactory.getGroupByProc());
       // The dispatcher fires the processor corresponding to the closest
       // matching rule and passes the context along
-      Dispatcher disp = new DefaultRuleDispatcher(LocalMapJoinProcFactory.getDefaultProc(),
+      SemanticDispatcher disp = new DefaultRuleDispatcher(LocalMapJoinProcFactory.getDefaultProc(),
           opRules, localMapJoinProcCtx);
       GraphWalker ogw = new DefaultGraphWalker(disp);
       // iterator the reducer operator tree

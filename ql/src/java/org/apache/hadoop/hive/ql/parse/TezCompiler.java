@@ -55,28 +55,11 @@ import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
-import org.apache.hadoop.hive.ql.lib.CompositeProcessor;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.ForwardWalker;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.PreOrderOnceWalker;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.log.PerfLogger;
 import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.optimizer.ConstantPropagate;
+import org.apache.hadoop.hive.ql.optimizer.*;
 import org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcCtx.ConstantPropagateOption;
-import org.apache.hadoop.hive.ql.optimizer.ConvertJoinMapJoin;
-import org.apache.hadoop.hive.ql.optimizer.DynamicPartitionPruningOptimization;
-import org.apache.hadoop.hive.ql.optimizer.MergeJoinProc;
-import org.apache.hadoop.hive.ql.optimizer.ReduceSinkMapJoinProc;
-import org.apache.hadoop.hive.ql.optimizer.RemoveDynamicPruningBySize;
-import org.apache.hadoop.hive.ql.optimizer.SetReducerParallelism;
-import org.apache.hadoop.hive.ql.optimizer.SharedWorkOptimizer;
 import org.apache.hadoop.hive.ql.optimizer.correlation.ReduceSinkJoinDeDuplication;
 import org.apache.hadoop.hive.ql.optimizer.metainfo.annotation.AnnotateWithOpTraits;
 import org.apache.hadoop.hive.ql.optimizer.physical.AnnotateRunTimeStatsOptimizer;
@@ -159,6 +142,9 @@ public class TezCompiler extends TaskCompiler {
     // run the optimizations that use stats for optimization
     runStatsDependentOptimizations(procCtx, inputs, outputs);
     perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "Run the optimizations that use stats for optimization");
+
+    // repopulate bucket versions; join conversion may have created some new reducesinks
+    new BucketVersionPopulator().transform(pCtx);
 
     perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.TEZ_COMPILER);
     if(procCtx.conf.getBoolVar(ConfVars.HIVEOPTJOINREDUCEDEDUPLICATION)) {
@@ -430,7 +416,7 @@ public class TezCompiler extends TaskCompiler {
 
     // create a walker which walks the tree in a DFS manner while maintaining
     // the operator stack.
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("Set parallelism - ReduceSink",
         ReduceSinkOperator.getOperatorName() + "%"),
         new SetReducerParallelism());
@@ -440,7 +426,7 @@ public class TezCompiler extends TaskCompiler {
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new ForwardWalker(disp);
@@ -456,7 +442,7 @@ public class TezCompiler extends TaskCompiler {
 
     // create a walker which walks the tree in a DFS manner while maintaining
     // the operator stack.
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(
         new RuleRegExp("Remove dynamic pruning by size",
         AppMasterEventOperator.getOperatorName() + "%"),
@@ -464,7 +450,7 @@ public class TezCompiler extends TaskCompiler {
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new ForwardWalker(disp);
@@ -482,14 +468,14 @@ public class TezCompiler extends TaskCompiler {
     Deque<Operator<?>> deque = new LinkedList<Operator<?>>();
     deque.addAll(procCtx.parseContext.getTopOps().values());
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(
         new RuleRegExp(new String("Dynamic Partition Pruning"), FilterOperator.getOperatorName()
             + "%"), new DynamicPartitionPruningOptimization());
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new ForwardWalker(disp);
@@ -513,7 +499,7 @@ public class TezCompiler extends TaskCompiler {
     // create a walker which walks the tree in a DFS manner while maintaining
     // the operator stack.
     // The dispatcher generates the plan from the operator tree
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("Split Work - ReduceSink",
         ReduceSinkOperator.getOperatorName() + "%"),
         genTezWork);
@@ -546,7 +532,7 @@ public class TezCompiler extends TaskCompiler {
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(pCtx.getTopOps().values());
     GraphWalker ogw = new GenTezWorkWalker(disp, procCtx);
@@ -718,7 +704,7 @@ public class TezCompiler extends TaskCompiler {
     HashMap<CommonMergeJoinOperator, TableScanOperator> JoinOpToTsOpMap = new HashMap<CommonMergeJoinOperator, TableScanOperator>();
   }
 
-  private static class SMBJoinOpProc implements NodeProcessor {
+  private static class SMBJoinOpProc implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -737,7 +723,7 @@ public class TezCompiler extends TaskCompiler {
       return;
     }
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(
             new RuleRegExp("R1", TableScanOperator.getOperatorName() + "%" +
                     ".*" + TezDummyStoreOperator.getOperatorName() + "%" +
@@ -746,7 +732,7 @@ public class TezCompiler extends TaskCompiler {
 
     SMBJoinOpProcContext ctx = new SMBJoinOpProcContext();
     // The dispatcher finds SMB and if there is semijoin optimization before it, removes it.
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, ctx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, ctx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new PreOrderOnceWalker(disp);
@@ -803,7 +789,7 @@ public class TezCompiler extends TaskCompiler {
     HashMap<Operator<?>,Operator<?>> childParentMap = new HashMap<Operator<?>,Operator<?>>();
   }
 
-  private static class SemiJoinCycleRemovalDueToMapsideJoins implements NodeProcessor {
+  private static class SemiJoinCycleRemovalDueToMapsideJoins implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -823,7 +809,7 @@ public class TezCompiler extends TaskCompiler {
       return;
     }
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(
             new RuleRegExp("R1", MapJoinOperator.getOperatorName() + "%" +
                     MapJoinOperator.getOperatorName() + "%"),
@@ -843,7 +829,7 @@ public class TezCompiler extends TaskCompiler {
 
     SemiJoinCycleRemovalDueTOMapsideJoinContext ctx =
             new SemiJoinCycleRemovalDueTOMapsideJoinContext();
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, ctx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, ctx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new PreOrderOnceWalker(disp);
@@ -907,7 +893,7 @@ public class TezCompiler extends TaskCompiler {
     }
   }
 
-  private static class SemiJoinRemovalIfNoStatsProc implements NodeProcessor {
+  private static class SemiJoinRemovalIfNoStatsProc implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -992,14 +978,14 @@ public class TezCompiler extends TaskCompiler {
       return;
     }
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(
             new RuleRegExp("R1", GroupByOperator.getOperatorName() + "%" +
                     ReduceSinkOperator.getOperatorName() + "%" +
                     GroupByOperator.getOperatorName() + "%" +
                     ReduceSinkOperator.getOperatorName() + "%"),
             new SemiJoinRemovalIfNoStatsProc());
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, procCtx);
     List<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new PreOrderOnceWalker(disp);

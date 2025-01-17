@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -37,15 +38,6 @@ import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer.GenericUDAFInfo;
@@ -89,7 +81,7 @@ public class CountDistinctRewriteProc extends Transform {
   @Override
   public ParseContext transform(ParseContext pctx) throws SemanticException {
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     // process group-by pattern
     opRules
         .put(
@@ -99,7 +91,7 @@ public class CountDistinctRewriteProc extends Transform {
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, null);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, null);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     // Create a list of topop nodes
@@ -110,8 +102,8 @@ public class CountDistinctRewriteProc extends Transform {
     return pctx;
   }
 
-  private NodeProcessor getDefaultProc() {
-    return new NodeProcessor() {
+  private SemanticNodeProcessor getDefaultProc() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
           Object... nodeOutputs) throws SemanticException {
@@ -120,7 +112,7 @@ public class CountDistinctRewriteProc extends Transform {
     };
   }
 
-  private NodeProcessor getCountDistinctProc(ParseContext pctx) {
+  private SemanticNodeProcessor getCountDistinctProc(ParseContext pctx) {
     return new CountDistinctProcessor(pctx);
   }
 
@@ -128,7 +120,7 @@ public class CountDistinctRewriteProc extends Transform {
    * CountDistinctProcessor.
    *
    */
-  public class CountDistinctProcessor implements NodeProcessor {
+  public class CountDistinctProcessor implements SemanticNodeProcessor {
 
     protected ParseContext pGraphContext;
 

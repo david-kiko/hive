@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.GroupByOperator;
@@ -32,15 +33,6 @@ import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
@@ -72,7 +64,7 @@ public class TableAccessAnalyzer {
   public TableAccessInfo analyzeTableAccess() throws SemanticException {
 
     // Set up the rules for the graph walker for group by and join operators
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", GroupByOperator.getOperatorName() + "%"),
         new GroupByProcessor(pGraphContext));
     opRules.put(new RuleRegExp("R2", JoinOperator.getOperatorName() + "%"),
@@ -81,7 +73,7 @@ public class TableAccessAnalyzer {
         new JoinProcessor(pGraphContext));
 
     TableAccessCtx tableAccessCtx = new TableAccessCtx();
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, tableAccessCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, tableAccessCtx);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     // Create a list of topop nodes and walk!
@@ -92,8 +84,8 @@ public class TableAccessAnalyzer {
     return tableAccessCtx.getTableAccessInfo();
   }
 
-  private NodeProcessor getDefaultProc() {
-    return new NodeProcessor() {
+  private SemanticNodeProcessor getDefaultProc() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack,
           NodeProcessorCtx procCtx, Object... nodeOutputs) throws SemanticException {
@@ -105,7 +97,7 @@ public class TableAccessAnalyzer {
   /**
    * Processor for GroupBy operator
    */
-  public class GroupByProcessor implements NodeProcessor {
+  public class GroupByProcessor implements SemanticNodeProcessor {
     protected ParseContext pGraphContext;
 
     public GroupByProcessor(ParseContext pGraphContext) {
@@ -152,7 +144,7 @@ public class TableAccessAnalyzer {
   /**
    * Processor for Join operator.
    */
-  public class JoinProcessor implements NodeProcessor {
+  public class JoinProcessor implements SemanticNodeProcessor {
     protected ParseContext pGraphContext;
 
     public JoinProcessor(ParseContext pGraphContext) {

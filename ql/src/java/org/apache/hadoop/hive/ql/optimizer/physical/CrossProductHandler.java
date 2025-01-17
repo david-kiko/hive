@@ -30,6 +30,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.plan.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,16 +46,6 @@ import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
 import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.plan.TezEdgeProperty.EdgeType;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
-import org.apache.hadoop.hive.ql.lib.TaskGraphWalker;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
@@ -254,7 +245,7 @@ public class CrossProductHandler implements PhysicalPlanResolver, Dispatcher {
    * <p>
    * For MR the taskname is the StageName, for Tez it is the vertex name.
    */
-  public static class MapJoinCheck implements NodeProcessor, NodeProcessorCtx {
+  public static class MapJoinCheck implements SemanticNodeProcessor, NodeProcessorCtx {
 
     final List<String> warnings;
     final String taskName;
@@ -265,10 +256,10 @@ public class CrossProductHandler implements PhysicalPlanResolver, Dispatcher {
     }
 
     List<String> analyze(BaseWork work) throws SemanticException {
-      Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+      Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
       opRules.put(new RuleRegExp("R1", MapJoinOperator.getOperatorName()
           + "%"), this);
-      Dispatcher disp = new DefaultRuleDispatcher(new NoopProcessor(), opRules, this);
+      SemanticDispatcher disp = new DefaultRuleDispatcher(new NoopProcessor(), opRules, this);
       GraphWalker ogw = new DefaultGraphWalker(disp);
       ArrayList<Node> topNodes = new ArrayList<Node>();
       topNodes.addAll(work.getAllRootOperators());
@@ -315,7 +306,7 @@ public class CrossProductHandler implements PhysicalPlanResolver, Dispatcher {
    * in the Work. For Tez, you can restrict it to ReduceSinks for a particular output
    * vertex.
    */
-  public static class ExtractReduceSinkInfo implements NodeProcessor, NodeProcessorCtx {
+  public static class ExtractReduceSinkInfo implements SemanticNodeProcessor, NodeProcessorCtx {
 
     static class Info {
       List<ExprNodeDesc> keyCols;
@@ -341,10 +332,10 @@ public class CrossProductHandler implements PhysicalPlanResolver, Dispatcher {
     }
 
     Map<Integer, Info> analyze(BaseWork work) throws SemanticException {
-      Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+      Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
       opRules.put(new RuleRegExp("R1", ReduceSinkOperator.getOperatorName()
           + "%"), this);
-      Dispatcher disp = new DefaultRuleDispatcher(new NoopProcessor(), opRules, this);
+      SemanticDispatcher disp = new DefaultRuleDispatcher(new NoopProcessor(), opRules, this);
       GraphWalker ogw = new DefaultGraphWalker(disp);
       ArrayList<Node> topNodes = new ArrayList<Node>();
       topNodes.addAll(work.getAllRootOperators());
@@ -372,7 +363,7 @@ public class CrossProductHandler implements PhysicalPlanResolver, Dispatcher {
     }
   }
 
-  static class NoopProcessor implements NodeProcessor {
+  static class NoopProcessor implements SemanticNodeProcessor {
     @Override
     public final Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {

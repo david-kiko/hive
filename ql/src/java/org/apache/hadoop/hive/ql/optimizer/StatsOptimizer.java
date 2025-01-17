@@ -37,15 +37,7 @@ import org.apache.hadoop.hive.ql.exec.SelectOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -119,14 +111,14 @@ public class StatsOptimizer extends Transform {
     String SEL = SelectOperator.getOperatorName() + "%";
     String FS = FileSinkOperator.getOperatorName() + "%";
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", TS + SEL + GBY + RS + GBY + SEL + FS),
         new MetaDataProcessor(pctx));
     opRules.put(new RuleRegExp("R2", TS + SEL + GBY + RS + GBY + FS),
             new MetaDataProcessor(pctx));
 
     NodeProcessorCtx soProcCtx = new StatsOptimizerProcContext();
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, soProcCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, soProcCtx);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     ArrayList<Node> topNodes = new ArrayList<Node>();
@@ -139,7 +131,7 @@ public class StatsOptimizer extends Transform {
     boolean stopProcess = false;
   }
 
-  private static class MetaDataProcessor implements NodeProcessor {
+  private static class MetaDataProcessor implements SemanticNodeProcessor {
 
     private final ParseContext pctx;
 

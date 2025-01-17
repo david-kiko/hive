@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.metastore.TableType;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -36,15 +37,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
@@ -105,7 +97,7 @@ public class SamplePruner extends Transform {
     SamplePrunerCtx samplePrunerCtx = new SamplePrunerCtx(pctx
         .getOpToSamplePruner());
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1",
       "(" + TableScanOperator.getOperatorName() + "%"
       + FilterOperator.getOperatorName() + "%"
@@ -115,7 +107,7 @@ public class SamplePruner extends Transform {
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules,
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules,
         samplePrunerCtx);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
@@ -130,7 +122,7 @@ public class SamplePruner extends Transform {
    * FilterPPR filter processor.
    *
    */
-  public static class FilterPPR implements NodeProcessor {
+  public static class FilterPPR implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -152,7 +144,7 @@ public class SamplePruner extends Transform {
     }
   }
 
-  public static NodeProcessor getFilterProc() {
+  public static SemanticNodeProcessor getFilterProc() {
     return new FilterPPR();
   }
 
@@ -160,7 +152,7 @@ public class SamplePruner extends Transform {
    * DefaultPPR default processor which does nothing.
    *
    */
-  public static class DefaultPPR implements NodeProcessor {
+  public static class DefaultPPR implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -170,7 +162,7 @@ public class SamplePruner extends Transform {
     }
   }
 
-  public static NodeProcessor getDefaultProc() {
+  public static SemanticNodeProcessor getDefaultProc() {
     return new DefaultPPR();
   }
 

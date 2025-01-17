@@ -35,15 +35,7 @@ import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.mr.ExecDriver;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.PreOrderWalker;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleExactMatch;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 
@@ -99,7 +91,7 @@ public class BucketingSortingInferenceOptimizer implements PhysicalPlanResolver 
       // In particular, this guarantees that the first operator is the reducer
       // (and its parent(s) are ReduceSinkOperators) since it begins walking the tree from
       // the reducer.
-      Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+      Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
       opRules.put(new RuleRegExp("R1", SelectOperator.getOperatorName() + "%"),
           BucketingSortingOpProcFactory.getSelProc());
       // Matches only GroupByOperators which are reducers, rather than map group by operators,
@@ -132,7 +124,7 @@ public class BucketingSortingInferenceOptimizer implements PhysicalPlanResolver 
 
       // The dispatcher fires the processor corresponding to the closest matching rule and passes
       // the context along
-      Dispatcher disp = new DefaultRuleDispatcher(BucketingSortingOpProcFactory.getDefaultProc(),
+      SemanticDispatcher disp = new DefaultRuleDispatcher(BucketingSortingOpProcFactory.getDefaultProc(),
           opRules, bCtx);
       GraphWalker ogw = new PreOrderWalker(disp);
 

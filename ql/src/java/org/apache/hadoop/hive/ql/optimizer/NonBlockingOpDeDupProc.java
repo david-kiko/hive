@@ -33,15 +33,7 @@ import org.apache.hadoop.hive.ql.exec.JoinOperator;
 import org.apache.hadoop.hive.ql.exec.MapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
@@ -60,11 +52,11 @@ public class NonBlockingOpDeDupProc extends Transform {
     // 1. We apply the transformation
     String SEL = SelectOperator.getOperatorName();
     String FIL = FilterOperator.getOperatorName();
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", SEL + "%" + SEL + "%"), new SelectDedup(pctx));
     opRules.put(new RuleRegExp("R2", FIL + "%" + FIL + "%"), new FilterDedup());
 
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     List<Node> topNodes = new ArrayList<Node>();
@@ -73,7 +65,7 @@ public class NonBlockingOpDeDupProc extends Transform {
     return pctx;
   }
 
-  private class SelectDedup implements NodeProcessor {
+  private class SelectDedup implements SemanticNodeProcessor {
 
     private ParseContext pctx;
 
@@ -211,7 +203,7 @@ public class NonBlockingOpDeDupProc extends Transform {
     }
   }
 
-  private class FilterDedup implements NodeProcessor {
+  private class FilterDedup implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,

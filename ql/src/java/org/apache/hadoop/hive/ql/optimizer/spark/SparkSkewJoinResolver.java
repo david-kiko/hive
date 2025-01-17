@@ -31,15 +31,7 @@ import org.apache.hadoop.hive.ql.exec.CommonJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.spark.SparkTask;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.PreOrderWalker;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.optimizer.physical.PhysicalContext;
 import org.apache.hadoop.hive.ql.optimizer.physical.PhysicalPlanResolver;
 import org.apache.hadoop.hive.ql.optimizer.physical.SkewJoinResolver;
@@ -55,7 +47,7 @@ public class SparkSkewJoinResolver implements PhysicalPlanResolver {
   @Override
   public PhysicalContext resolve(PhysicalContext pctx) throws SemanticException {
     SparkSkewJoinProcFactory.getVisitedJoinOp().clear();
-    Dispatcher disp = new SparkSkewJoinTaskDispatcher(pctx);
+    SemanticDispatcher disp = new SparkSkewJoinTaskDispatcher(pctx);
     // since we may split current task, use a pre-order walker
     GraphWalker ogw = new PreOrderWalker(disp);
     ArrayList<Node> topNodes = new ArrayList<Node>();
@@ -64,7 +56,7 @@ public class SparkSkewJoinResolver implements PhysicalPlanResolver {
     return pctx;
   }
 
-  class SparkSkewJoinTaskDispatcher implements Dispatcher {
+  class SparkSkewJoinTaskDispatcher implements SemanticDispatcher {
     private PhysicalContext physicalContext;
 
     public SparkSkewJoinTaskDispatcher(PhysicalContext context) {
@@ -82,10 +74,10 @@ public class SparkSkewJoinResolver implements PhysicalPlanResolver {
         SparkWork sparkWork = ((SparkTask) task).getWork();
         SparkSkewJoinProcCtx skewJoinProcCtx =
             new SparkSkewJoinProcCtx(task, physicalContext.getParseContext());
-        Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+        Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
         opRules.put(new RuleRegExp("R1", CommonJoinOperator.getOperatorName() + "%"),
             SparkSkewJoinProcFactory.getJoinProc());
-        Dispatcher disp = new DefaultRuleDispatcher(
+        SemanticDispatcher disp = new DefaultRuleDispatcher(
             SparkSkewJoinProcFactory.getDefaultProc(), opRules, skewJoinProcCtx);
         GraphWalker ogw = new DefaultGraphWalker(disp);
         ArrayList<Node> topNodes = new ArrayList<Node>();

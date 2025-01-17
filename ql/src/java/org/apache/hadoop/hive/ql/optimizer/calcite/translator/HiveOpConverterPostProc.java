@@ -30,15 +30,7 @@ import org.apache.hadoop.hive.ql.exec.JoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.ForwardWalker;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -65,11 +57,11 @@ public class HiveOpConverterPostProc extends Transform {
     this.aliasToOpInfo = new HashMap<String, Operator<? extends OperatorDesc>>();
 
     // 2. Trigger transformation
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", JoinOperator.getOperatorName() + "%"), new JoinAnnotate());
     opRules.put(new RuleRegExp("R2", TableScanOperator.getOperatorName() + "%"), new TableScanAnnotate());
 
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
     GraphWalker ogw = new ForwardWalker(disp);
 
     List<Node> topNodes = new ArrayList<Node>();
@@ -78,7 +70,7 @@ public class HiveOpConverterPostProc extends Transform {
     return pctx;
   }
 
-  private class JoinAnnotate implements NodeProcessor {
+  private class JoinAnnotate implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -126,7 +118,7 @@ public class HiveOpConverterPostProc extends Transform {
   }
 
 
-  private class TableScanAnnotate implements NodeProcessor {
+  private class TableScanAnnotate implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,

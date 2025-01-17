@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.optimizer.PrunerExpressionOperatorFactory;
 import org.apache.hadoop.hive.ql.optimizer.PrunerUtils;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -74,7 +75,7 @@ public final class ExprProcFactory extends PrunerExpressionOperatorFactory {
    *
    * @return
    */
-  public static NodeProcessor getColumnProcessor() {
+  public static SemanticNodeProcessor getColumnProcessor() {
     return new PPRColumnExprProcessor();
   }
 

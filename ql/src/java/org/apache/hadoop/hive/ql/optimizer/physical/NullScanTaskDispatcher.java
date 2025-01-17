@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
@@ -46,13 +47,6 @@ import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.io.NullScanFileSystem;
 import org.apache.hadoop.hive.ql.io.OneNullRowInputFormat;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.PreOrderOnceWalker;
-import org.apache.hadoop.hive.ql.lib.Rule;
 import org.apache.hadoop.hive.ql.optimizer.physical.MetadataOnlyOptimizer.WalkerCtx;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -66,14 +60,14 @@ import org.apache.hadoop.hive.serde2.NullStructSerDe;
  * Iterate over all tasks one by one and removes all input paths from task if conditions as
  * defined in rules match.
  */
-public class NullScanTaskDispatcher implements Dispatcher {
+public class NullScanTaskDispatcher implements SemanticDispatcher {
 
   static final Logger LOG = LoggerFactory.getLogger(NullScanTaskDispatcher.class.getName());
 
   private final PhysicalContext physicalContext;
-  private final Map<Rule, NodeProcessor> rules;
+  private final Map<SemanticRule, SemanticNodeProcessor> rules;
 
-  public NullScanTaskDispatcher(PhysicalContext context,  Map<Rule, NodeProcessor> rules) {
+  public NullScanTaskDispatcher(PhysicalContext context,  Map<SemanticRule, SemanticNodeProcessor> rules) {
     super();
     physicalContext = context;
     this.rules = rules;
@@ -195,7 +189,7 @@ public class NullScanTaskDispatcher implements Dispatcher {
 
       // The dispatcher fires the processor corresponding to the closest
       // matching rule and passes the context along
-      Dispatcher disp = new DefaultRuleDispatcher(null, rules, walkerCtx);
+      SemanticDispatcher disp = new DefaultRuleDispatcher(null, rules, walkerCtx);
       GraphWalker ogw = new PreOrderOnceWalker(disp);
 
       // Create a list of topOp nodes

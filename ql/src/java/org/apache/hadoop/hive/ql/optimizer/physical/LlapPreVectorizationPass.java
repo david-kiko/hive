@@ -29,15 +29,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.MapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.tez.TezTask;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.optimizer.physical.LlapDecider.LlapMode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
@@ -62,7 +54,7 @@ public class LlapPreVectorizationPass implements PhysicalPlanResolver {
       return pctx;
     }
 
-    Dispatcher disp = new LlapPreVectorizationPassDispatcher(pctx);
+    SemanticDispatcher disp = new LlapPreVectorizationPassDispatcher(pctx);
     GraphWalker ogw = new DefaultGraphWalker(disp);
     ArrayList<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(pctx.getRootTasks());
@@ -71,7 +63,7 @@ public class LlapPreVectorizationPass implements PhysicalPlanResolver {
     return pctx;
   }
 
-  class LlapPreVectorizationPassDispatcher implements Dispatcher {
+  class LlapPreVectorizationPassDispatcher implements SemanticDispatcher {
     HiveConf conf;
 
     LlapPreVectorizationPassDispatcher(PhysicalContext pctx) {
@@ -94,7 +86,7 @@ public class LlapPreVectorizationPass implements PhysicalPlanResolver {
 
     private void handleWork(TezWork tezWork, BaseWork work)
         throws SemanticException {
-      Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+      Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
 
       if (conf.getVar(HiveConf.ConfVars.LLAP_EXECUTION_MODE).equals("only")
           && !conf.getBoolVar(HiveConf.ConfVars.LLAP_ENABLE_GRACE_JOIN_IN_LLAP)) {
@@ -103,7 +95,7 @@ public class LlapPreVectorizationPass implements PhysicalPlanResolver {
         // we will disable the grace hash join now, before vectorization is done.
         opRules.put(
             new RuleRegExp("Disable grace hash join if LLAP mode and not dynamic partition hash join",
-                MapJoinOperator.getOperatorName() + "%"), new NodeProcessor() {
+                MapJoinOperator.getOperatorName() + "%"), new SemanticNodeProcessor() {
               @Override
               public Object process(Node n, Stack<Node> s, NodeProcessorCtx c, Object... os) {
                 MapJoinOperator mapJoinOp = (MapJoinOperator) n;
@@ -117,7 +109,7 @@ public class LlapPreVectorizationPass implements PhysicalPlanResolver {
       }
 
       if (!opRules.isEmpty()) {
-        Dispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
+        SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, null);
         GraphWalker ogw = new DefaultGraphWalker(disp);
         ArrayList<Node> topNodes = new ArrayList<Node>();
         topNodes.addAll(work.getAllRootOperators());

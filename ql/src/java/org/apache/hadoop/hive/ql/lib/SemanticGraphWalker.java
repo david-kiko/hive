@@ -15,31 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.hadoop.hive.ql.lib;
 
-import java.util.Stack;
+import java.util.Collection;
+import java.util.HashMap;
 
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
- * CompositeProcessor. Holds a list of node processors to be fired by the same
- * rule.
- *
+ * Interface for operator graph walker.
  */
-public class CompositeProcessor implements SemanticNodeProcessor {
+public interface SemanticGraphWalker extends GraphWalker {
 
-  NodeProcessor[] procs;
+    /**
+     * starting point for walking.
+     *
+     * @param startNodes
+     *          list of starting operators
+     * @param nodeOutput
+     *          If this parameter is not null, the call to the function returns
+     *          the map from node to objects returned by the processors.
+     * @throws SemanticException
+     */
+    @Override
+    void startWalking(Collection<Node> startNodes,
+                      HashMap<Node, Object> nodeOutput) throws SemanticException;
 
-  public CompositeProcessor(NodeProcessor...nodeProcessors) {
-    procs = nodeProcessors;
-  }
-
-  @Override
-  public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx, Object... nodeOutputs)
-      throws SemanticException {
-    for (NodeProcessor proc: procs) {
-      proc.process(nd, stack, procCtx, nodeOutputs);
-    }
-    return null;
-  }
 }

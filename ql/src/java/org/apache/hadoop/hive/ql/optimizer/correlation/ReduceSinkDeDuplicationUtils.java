@@ -309,6 +309,11 @@ public class ReduceSinkDeDuplicationUtils {
     if (cConf.getDistinctColumnIndices().size() >= 2) {
       return null;
     }
+
+    if (cConf.getBucketingVersion() != pConf.getBucketingVersion()) {
+      return null;
+    }
+
     Integer moveReducerNumTo = checkNumReducer(cConf.getNumReducers(), pConf.getNumReducers());
     if (moveReducerNumTo == null ||
         moveReducerNumTo > 0 && cConf.getNumReducers() < minReducer) {
@@ -334,6 +339,11 @@ public class ReduceSinkDeDuplicationUtils {
 
   private static boolean isStrictEqualityNeeded(ReduceSinkOperator cRS, ReduceSinkOperator pRS) {
     Operator<? extends OperatorDesc> parent = cRS.getParentOperators().get(0);
+
+    if (cRS.getConf().getBucketingVersion() != pRS.getConf().getBucketingVersion()) {
+      return false;
+    }
+
     while (parent != pRS) {
       assert parent.getNumParent() == 1;
       if (parent instanceof PTFOperator) {
@@ -487,6 +497,11 @@ public class ReduceSinkDeDuplicationUtils {
     // Check that in the path between cRS and pRS, there are only Select operators
     // i.e. the sequence must be pRS-SEL*-cRS
     Operator<? extends OperatorDesc> parent = cRS.getParentOperators().get(0);
+
+    if (cRS.getConf().getBucketingVersion() != pRS.getConf().getBucketingVersion()) {
+      return false;
+    }
+
     while (parent != pRS) {
       assert parent.getNumParent() == 1;
       if (!(parent instanceof SelectOperator)) {

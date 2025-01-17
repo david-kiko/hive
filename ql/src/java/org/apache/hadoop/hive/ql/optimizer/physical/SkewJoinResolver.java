@@ -27,15 +27,7 @@ import java.util.Stack;
 import org.apache.hadoop.hive.ql.exec.CommonJoinOperator;
 import org.apache.hadoop.hive.ql.exec.ConditionalTask;
 import org.apache.hadoop.hive.ql.exec.Task;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.LoadFileDesc;
@@ -53,7 +45,7 @@ public class SkewJoinResolver implements PhysicalPlanResolver {
 
   @Override
   public PhysicalContext resolve(PhysicalContext pctx) throws SemanticException {
-    Dispatcher disp = new SkewJoinTaskDispatcher(pctx);
+    SemanticDispatcher disp = new SkewJoinTaskDispatcher(pctx);
     GraphWalker ogw = new DefaultGraphWalker(disp);
     ArrayList<Node> topNodes = new ArrayList<Node>();
     topNodes.addAll(pctx.getRootTasks());
@@ -64,7 +56,7 @@ public class SkewJoinResolver implements PhysicalPlanResolver {
   /**
    * Iterator a task with a rule dispatcher for its reducer operator tree.
    */
-  class SkewJoinTaskDispatcher implements Dispatcher {
+  class SkewJoinTaskDispatcher implements SemanticDispatcher {
 
     private PhysicalContext physicalContext;
 
@@ -107,14 +99,14 @@ public class SkewJoinResolver implements PhysicalPlanResolver {
 
       SkewJoinProcCtx skewJoinProcContext = new SkewJoinProcCtx(task, pc);
 
-      Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+      Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
       opRules.put(new RuleRegExp("R1",
         CommonJoinOperator.getOperatorName() + "%"),
         SkewJoinProcFactory.getJoinProc());
 
       // The dispatcher fires the processor corresponding to the closest
       // matching rule and passes the context along
-      Dispatcher disp = new DefaultRuleDispatcher(SkewJoinProcFactory
+      SemanticDispatcher disp = new DefaultRuleDispatcher(SkewJoinProcFactory
           .getDefaultProc(), opRules, skewJoinProcContext);
       GraphWalker ogw = new DefaultGraphWalker(disp);
 

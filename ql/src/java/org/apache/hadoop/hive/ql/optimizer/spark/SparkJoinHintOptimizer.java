@@ -24,6 +24,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.optimizer.BucketJoinProcCtx;
 import org.apache.hadoop.hive.ql.optimizer.BucketMapjoinProc;
 import org.apache.hadoop.hive.ql.optimizer.SortBucketJoinProcCtx;
@@ -39,7 +40,7 @@ import org.apache.hadoop.hive.ql.parse.spark.OptimizeSparkProcContext;
  * The idea is eventually to process even hinted Mapjoin hints here,
  * but due to code complexity in refactoring, that is still in Optimizer.
  */
-public class SparkJoinHintOptimizer implements NodeProcessor {
+public class SparkJoinHintOptimizer implements SemanticNodeProcessor {
 
   private BucketMapjoinProc bucketMapJoinOptimizer;
   private SparkSMBJoinHintOptimizer smbMapJoinOptimizer;

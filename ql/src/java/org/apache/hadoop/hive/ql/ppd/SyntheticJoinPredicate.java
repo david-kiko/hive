@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -37,15 +38,6 @@ import org.apache.hadoop.hive.ql.exec.OperatorFactory;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.PreOrderOnceWalker;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -82,7 +74,7 @@ public class SyntheticJoinPredicate extends Transform {
       return pctx;
     }
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", "(" +
         TableScanOperator.getOperatorName() + "%" + ".*" +
         ReduceSinkOperator.getOperatorName() + "%" +
@@ -91,7 +83,7 @@ public class SyntheticJoinPredicate extends Transform {
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
     SyntheticContext context = new SyntheticContext(pctx);
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, context);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, context);
     GraphWalker ogw = new PreOrderOnceWalker(disp);
 
     // Create a list of top op nodes
@@ -129,7 +121,7 @@ public class SyntheticJoinPredicate extends Transform {
     }
   }
 
-  private static class JoinSynthetic implements NodeProcessor {
+  private static class JoinSynthetic implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {

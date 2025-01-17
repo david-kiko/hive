@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.Node;
+import org.apache.hadoop.hive.ql.lib.SemanticDispatcher;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 
@@ -45,7 +46,7 @@ public class GenTezWorkWalker extends DefaultGraphWalker {
    * @param ctx the context where we'll set the current root operator
    *
    */
-  public GenTezWorkWalker(Dispatcher disp, GenTezProcContext ctx) {
+  public GenTezWorkWalker(SemanticDispatcher disp, GenTezProcContext ctx) {
     super(disp);
     this.ctx = ctx;
   }

@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.ql.optimizer.pcr;
 import java.util.ArrayList;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
@@ -56,7 +57,7 @@ public final class PcrOpProcFactory {
    * Remove partition condition in a filter operator when possible. This is
    * called only when the filter follows a table scan operator.
    */
-  public static class FilterPCR implements NodeProcessor {
+  public static class FilterPCR implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -158,7 +159,7 @@ public final class PcrOpProcFactory {
   /**
    * Default processor which does nothing
    */
-  public static class DefaultPCR implements NodeProcessor {
+  public static class DefaultPCR implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -168,11 +169,11 @@ public final class PcrOpProcFactory {
     }
   }
 
-  public static NodeProcessor getFilterProc() {
+  public static SemanticNodeProcessor getFilterProc() {
     return new FilterPCR();
   }
 
-  public static NodeProcessor getDefaultProc() {
+  public static SemanticNodeProcessor getDefaultProc() {
     return new DefaultPCR();
   }
 

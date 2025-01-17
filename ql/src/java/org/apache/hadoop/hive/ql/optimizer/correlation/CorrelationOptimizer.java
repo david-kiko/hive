@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.ContentSummary;
@@ -48,15 +49,6 @@ import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.optimizer.MapJoinProcessor;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
@@ -217,11 +209,11 @@ public class CorrelationOptimizer extends Transform {
 
     // detect correlations
     CorrelationNodeProcCtx corrCtx = new CorrelationNodeProcCtx(pCtx);
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", ReduceSinkOperator.getOperatorName() + "%"),
         new CorrelationNodeProc());
 
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, corrCtx);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, corrCtx);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     // Create a list of topOp nodes
@@ -248,7 +240,7 @@ public class CorrelationOptimizer extends Transform {
     return pCtx;
   }
 
-  private class CorrelationNodeProc implements NodeProcessor {
+  private class CorrelationNodeProc implements SemanticNodeProcessor {
 
     private void analyzeReduceSinkOperatorsOfJoinOperator(JoinCondDesc[] joinConds,
         List<Operator<? extends OperatorDesc>> rsOps, Operator<? extends OperatorDesc> curentRsOp,
@@ -628,8 +620,8 @@ public class CorrelationOptimizer extends Transform {
     }
   }
 
-  private NodeProcessor getDefaultProc() {
-    return new NodeProcessor() {
+  private SemanticNodeProcessor getDefaultProc() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack,
           NodeProcessorCtx ctx, Object... nodeOutputs) throws SemanticException {

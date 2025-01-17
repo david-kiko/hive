@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.optimizer.physical.SkewJoinResolver.SkewJoinProcCtx;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -35,11 +36,11 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  */
 public final class SkewJoinProcFactory {
 
-  public static NodeProcessor getDefaultProc() {
+  public static SemanticNodeProcessor getDefaultProc() {
     return new SkewJoinDefaultProcessor();
   }
 
-  public static NodeProcessor getJoinProc() {
+  public static SemanticNodeProcessor getJoinProc() {
     return new SkewJoinJoinProcessor();
   }
 
@@ -47,7 +48,7 @@ public final class SkewJoinProcFactory {
    * SkewJoinJoinProcessor.
    *
    */
-  public static class SkewJoinJoinProcessor implements NodeProcessor {
+  public static class SkewJoinJoinProcessor implements SemanticNodeProcessor {
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
       SkewJoinProcCtx context = (SkewJoinProcCtx) ctx;
@@ -66,7 +67,7 @@ public final class SkewJoinProcFactory {
    * SkewJoinDefaultProcessor.
    *
    */
-  public static class SkewJoinDefaultProcessor implements NodeProcessor {
+  public static class SkewJoinDefaultProcessor implements SemanticNodeProcessor {
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx ctx,
         Object... nodeOutputs) throws SemanticException {
       return null;

@@ -241,7 +241,7 @@ public class VectorReduceSinkObjectHashOperator extends VectorReduceSinkCommonOp
           for (int logical = 0; logical< size; logical++) {
             final int batchIndex = (selectedInUse ? selected[logical] : logical);
             partitionVectorExtractRow.extractRow(batch, batchIndex, partitionFieldValues);
-            final int hashCode = bucketingVersion == 2 && !vectorDesc.getIsAcidChange() ?
+            final int hashCode = getConf().getBucketingVersion() == 2 && !vectorDesc.getIsAcidChange() ?
                 ObjectInspectorUtils.getBucketHashCode(
                     partitionFieldValues, partitionObjectInspectors) :
                 ObjectInspectorUtils.getBucketHashCodeOld(
@@ -254,7 +254,7 @@ public class VectorReduceSinkObjectHashOperator extends VectorReduceSinkCommonOp
           for (int logical = 0; logical< size; logical++) {
             final int batchIndex = (selectedInUse ? selected[logical] : logical);
             bucketVectorExtractRow.extractRow(batch, batchIndex, bucketFieldValues);
-            final int bucketNum = bucketingVersion == 2 ?
+            final int bucketNum = getConf().getBucketingVersion() == 2 ?
                 ObjectInspectorUtils.getBucketNumber(bucketFieldValues,
                   bucketObjectInspectors, numBuckets) :
                 ObjectInspectorUtils.getBucketNumberOld(
@@ -268,7 +268,7 @@ public class VectorReduceSinkObjectHashOperator extends VectorReduceSinkCommonOp
             partitionVectorExtractRow.extractRow(batch, batchIndex, partitionFieldValues);
             bucketVectorExtractRow.extractRow(batch, batchIndex, bucketFieldValues);
             final int hashCode, bucketNum;
-            if (bucketingVersion == 2 && !vectorDesc.getIsAcidChange()) {
+            if (getConf().getBucketingVersion() == 2 && !vectorDesc.getIsAcidChange()) {
               bucketNum =
                   ObjectInspectorUtils.getBucketNumber(
                       bucketFieldValues, bucketObjectInspectors, numBuckets);

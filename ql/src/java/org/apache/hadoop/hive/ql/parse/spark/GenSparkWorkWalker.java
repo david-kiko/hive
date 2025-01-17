@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.Node;
+import org.apache.hadoop.hive.ql.lib.SemanticDispatcher;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
@@ -45,7 +46,7 @@ public class GenSparkWorkWalker extends DefaultGraphWalker {
    * @param ctx the context where we'll set the current root operator
    *
    */
-  public GenSparkWorkWalker(Dispatcher disp, GenSparkProcContext ctx) {
+  public GenSparkWorkWalker(SemanticDispatcher disp, GenSparkProcContext ctx) {
     super(disp);
     this.ctx = ctx;
   }

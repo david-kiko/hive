@@ -28,15 +28,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.PreOrderWalker;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
@@ -95,7 +87,7 @@ class TablePropertyEnrichmentOptimizer extends Transform {
     return originalTableParameters;
   }
 
-  private static class Processor implements NodeProcessor {
+  private static class Processor implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx, Object... nodeOutputs) throws SemanticException {
@@ -149,12 +141,12 @@ class TablePropertyEnrichmentOptimizer extends Transform {
 
     LOG.info("TablePropertyEnrichmentOptimizer::transform().");
 
-    Map<Rule, NodeProcessor> opRules = Maps.newLinkedHashMap();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = Maps.newLinkedHashMap();
     opRules.put(new RuleRegExp("R1", TableScanOperator.getOperatorName() + "%"),
         new Processor());
 
     WalkerCtx context = new WalkerCtx(pctx.getConf());
-    Dispatcher disp = new DefaultRuleDispatcher(null, opRules, context);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(null, opRules, context);
 
     List<Node> topNodes = Lists.newArrayList();
     topNodes.addAll(pctx.getTopOps().values());

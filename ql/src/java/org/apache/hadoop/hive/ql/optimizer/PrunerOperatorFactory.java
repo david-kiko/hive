@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.parse.TypeCheckProcFactory;
@@ -49,7 +50,7 @@ public abstract class PrunerOperatorFactory {
    * Determines the partition pruner for the filter. This is called only when
    * the filter follows a table scan operator.
    */
-  public static abstract class FilterPruner implements NodeProcessor {
+  public static abstract class FilterPruner implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -173,7 +174,7 @@ public abstract class PrunerOperatorFactory {
   /**
    * Default processor which just merges its children.
    */
-  public static class DefaultPruner implements NodeProcessor {
+  public static class DefaultPruner implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
@@ -190,7 +191,7 @@ public abstract class PrunerOperatorFactory {
    *
    * @return
    */
-  public final static NodeProcessor getDefaultProc() {
+  public final static SemanticNodeProcessor getDefaultProc() {
     return new DefaultPruner();
   }
 

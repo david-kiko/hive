@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -30,15 +31,6 @@ import org.apache.hadoop.hive.ql.exec.JoinOperator;
 import org.apache.hadoop.hive.ql.exec.MapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
@@ -58,13 +50,13 @@ public class SortedMergeBucketMapJoinOptimizer extends Transform {
 
     // Go through all joins - it should only contain selects and filters between
     // tablescan and join operators.
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", JoinOperator.getOperatorName() + "%"),
       getCheckCandidateJoin());
 
     // The dispatcher fires the processor corresponding to the closest matching
     // rule and passes the context along
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, smbJoinContext);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, smbJoinContext);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     // Create a list of topop nodes
@@ -85,7 +77,7 @@ public class SortedMergeBucketMapJoinOptimizer extends Transform {
     // dictates which operator is allowed
     getListOfRejectedJoins(pctx, smbJoinContext);
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     // go through all map joins and find out all which have enabled bucket map
     // join.
     opRules.put(new RuleRegExp("R1", MapJoinOperator.getOperatorName() + "%"),
@@ -100,7 +92,7 @@ public class SortedMergeBucketMapJoinOptimizer extends Transform {
         getSortedMergeJoinProc(pctx));
     }
 
-    Dispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, smbJoinContext);
+    SemanticDispatcher disp = new DefaultRuleDispatcher(getDefaultProc(), opRules, smbJoinContext);
     GraphWalker ogw = new DefaultGraphWalker(disp);
 
     // Create a list of topop nodes
@@ -111,16 +103,16 @@ public class SortedMergeBucketMapJoinOptimizer extends Transform {
     return pctx;
   }
 
-  private NodeProcessor getSortedMergeBucketMapjoinProc(ParseContext pctx) {
+  private SemanticNodeProcessor getSortedMergeBucketMapjoinProc(ParseContext pctx) {
     return new SortedMergeBucketMapjoinProc(pctx);
   }
 
-  private NodeProcessor getSortedMergeJoinProc(ParseContext pctx) {
+  private SemanticNodeProcessor getSortedMergeJoinProc(ParseContext pctx) {
     return new SortedMergeJoinProc(pctx);
   }
 
-  private NodeProcessor getDefaultProc() {
-    return new NodeProcessor() {
+  private SemanticNodeProcessor getDefaultProc() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack,
           NodeProcessorCtx procCtx, Object... nodeOutputs)
@@ -132,8 +124,8 @@ public class SortedMergeBucketMapJoinOptimizer extends Transform {
 
   // check if the join operator encountered is a candidate for being converted
   // to a sort-merge join
-  private NodeProcessor getCheckCandidateJoin() {
-    return new NodeProcessor() {
+  private SemanticNodeProcessor getCheckCandidateJoin() {
+    return new SemanticNodeProcessor() {
       @Override
       public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {

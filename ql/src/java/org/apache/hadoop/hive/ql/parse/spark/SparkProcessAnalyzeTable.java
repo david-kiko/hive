@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
@@ -54,7 +55,7 @@ import com.google.common.base.Preconditions;
  *
  * Cloned from Tez ProcessAnalyzeTable.
  */
-public class SparkProcessAnalyzeTable implements NodeProcessor {
+public class SparkProcessAnalyzeTable implements SemanticNodeProcessor {
   private static final Logger LOGGER = LoggerFactory.getLogger(SparkProcessAnalyzeTable.class.getName());
 
   // shared plan utils for spark

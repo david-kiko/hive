@@ -28,15 +28,7 @@ import org.apache.hadoop.hive.ql.exec.CommonMergeJoinOperator;
 import org.apache.hadoop.hive.ql.exec.MapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
-import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
-import org.apache.hadoop.hive.ql.lib.Dispatcher;
-import org.apache.hadoop.hive.ql.lib.ForwardWalker;
-import org.apache.hadoop.hive.ql.lib.GraphWalker;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.lib.NodeProcessor;
-import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
-import org.apache.hadoop.hive.ql.lib.Rule;
-import org.apache.hadoop.hive.ql.lib.RuleRegExp;
+import org.apache.hadoop.hive.ql.lib.*;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -72,11 +64,11 @@ public class ReduceSinkJoinDeDuplication extends Transform {
 
     ReduceSinkJoinDeDuplicateProcCtx cppCtx = new ReduceSinkJoinDeDuplicateProcCtx(pGraphContext);
 
-    Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
+    Map<SemanticRule, SemanticNodeProcessor> opRules = new LinkedHashMap<SemanticRule, SemanticNodeProcessor>();
     opRules.put(new RuleRegExp("R1", ReduceSinkOperator.getOperatorName() + "%"),
         ReduceSinkJoinDeDuplicateProcFactory.getReducerMapJoinProc());
 
-    Dispatcher disp = new DefaultRuleDispatcher(
+    SemanticDispatcher disp = new DefaultRuleDispatcher(
         ReduceSinkJoinDeDuplicateProcFactory.getDefaultProc(), opRules, cppCtx);
     GraphWalker ogw = new ForwardWalker(disp);
 
@@ -96,11 +88,11 @@ public class ReduceSinkJoinDeDuplication extends Transform {
 
   static class ReduceSinkJoinDeDuplicateProcFactory {
 
-    public static NodeProcessor getReducerMapJoinProc() {
+    public static SemanticNodeProcessor getReducerMapJoinProc() {
       return new ReducerProc();
     }
 
-    public static NodeProcessor getDefaultProc() {
+    public static SemanticNodeProcessor getDefaultProc() {
       return new DefaultProc();
     }
   }
@@ -108,7 +100,7 @@ public class ReduceSinkJoinDeDuplication extends Transform {
   /*
    * do nothing.
    */
-  static class DefaultProc implements NodeProcessor {
+  static class DefaultProc implements SemanticNodeProcessor {
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,
         Object... nodeOutputs) throws SemanticException {
@@ -116,7 +108,7 @@ public class ReduceSinkJoinDeDuplication extends Transform {
     }
   }
 
-  static class ReducerProc implements NodeProcessor {
+  static class ReducerProc implements SemanticNodeProcessor {
 
     @Override
     public Object process(Node nd, Stack<Node> stack, NodeProcessorCtx procCtx,

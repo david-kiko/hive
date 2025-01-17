@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
@@ -46,7 +47,7 @@ import org.apache.hadoop.mapred.InputFormat;
  * (normal, no scan.) The plan at this point will be a single
  * table scan operator.
  */
-public class ProcessAnalyzeTable implements NodeProcessor {
+public class ProcessAnalyzeTable implements SemanticNodeProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(ProcessAnalyzeTable.class.getName());
 

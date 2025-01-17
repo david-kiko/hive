@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.parse;
 
 import java.util.Stack;
 
+import org.apache.hadoop.hive.ql.lib.SemanticNodeProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.UnionOperator;
@@ -32,7 +33,7 @@ import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
  * processing.
  *
  */
-public class UnionProcessor implements NodeProcessor {
+public class UnionProcessor implements SemanticNodeProcessor {
 
   static final private Logger LOG = LoggerFactory.getLogger(UnionProcessor.class.getName());
 
