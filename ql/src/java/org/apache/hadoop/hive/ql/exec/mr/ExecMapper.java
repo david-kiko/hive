@@ -19,18 +19,14 @@
 package org.apache.hadoop.hive.ql.exec.mr;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
-import org.apache.hadoop.hive.ql.exec.AbstractMapOperator;
-import org.apache.hadoop.hive.ql.exec.MapOperator;
-import org.apache.hadoop.hive.ql.exec.MapredContext;
-import org.apache.hadoop.hive.ql.exec.Operator;
-import org.apache.hadoop.hive.ql.exec.OperatorUtils;
-import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.exec.vector.VectorMapOperator;
 import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.MapredLocalWork;
@@ -95,6 +91,10 @@ public class ExecMapper extends MapReduceBase implements Mapper {
       mo.initialize(job, null);
       mo.setChildren(job);
       l4j.info(mo.dump(0));
+
+      // defined self balance ReduceSinkOperator of bucketVersion
+      balanceRSOpbucketVersion(mo);
+
       // initialize map local work
       localWork = mrwork.getMapRedLocalWork();
       execContext.setLocalWork(localWork);
@@ -128,6 +128,42 @@ public class ExecMapper extends MapReduceBase implements Mapper {
       }
     }
   }
+
+  /**
+   * defined-self balance ReduceSinkOperator of bucketVersion, keep values to sameness
+   * @param rootOp
+   */
+  private static void balanceRSOpbucketVersion(Operator rootOp){
+    List<Operator<? extends OperatorDesc>> needDealOps = new ArrayList<Operator<? extends OperatorDesc>>();
+    visitChildGetRSOps(rootOp, needDealOps);
+    int bucketVersion = -1;
+    for(Operator<? extends OperatorDesc> rsop : needDealOps){
+      if(rsop.getConf().getBucketingVersion() != 2 && rsop.getConf().getBucketingVersion() != 1){
+        rsop.getConf().setBucketingVersion(-1);
+      }
+      if(rsop.getConf().getBucketingVersion() > bucketVersion){
+        bucketVersion = rsop.getConf().getBucketingVersion();
+      }
+    }
+    for(Operator<? extends OperatorDesc> rsop : needDealOps){
+      l4j.info("update reduceSinkOperator name="+rsop.getName()+", opId="+rsop.getOperatorId()+", oldBucketVersion="+rsop.getConf().getBucketingVersion()+", newBucketVersion="+bucketVersion);
+      rsop.getConf().setBucketingVersion(bucketVersion);
+    }
+    needDealOps.clear();
+  }
+  private static void visitChildGetRSOps(Operator rootOp, List<Operator<? extends OperatorDesc>> needDealOps){
+    List<Operator<? extends OperatorDesc>> ops = rootOp.getChildOperators();
+    if(ops == null || ops.isEmpty()){
+      return;
+    }
+    for(Operator<? extends OperatorDesc> op : ops) {
+      if (op instanceof ReduceSinkOperator) {
+        needDealOps.add(op);
+      }
+      visitChildGetRSOps(op, needDealOps);
+    }
+  }
+
   @Override
   public void map(Object key, Object value, OutputCollector output,
       Reporter reporter) throws IOException {
