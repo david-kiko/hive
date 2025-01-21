@@ -810,7 +810,7 @@ public class VectorizationContext {
           exprDesc.getChildren(), exprDesc.getTypeInfo());
 
       // Are we forcing the usage of VectorUDFAdaptor for test purposes?
-      if (!testVectorAdaptorOverride) {
+      if (testVectorAdaptorOverride) {
         ve = getGenericUdfVectorExpression(expr.getGenericUDF(),
             childExpressions, mode, exprDesc.getTypeInfo());
       }
