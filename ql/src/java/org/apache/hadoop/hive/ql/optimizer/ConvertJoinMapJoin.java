@@ -755,7 +755,7 @@ public class ConvertJoinMapJoin implements SemanticNodeProcessor {
      * join column in say a group by operation
      */
     if (numBuckets < 0) {
-      numBuckets = rs.getConf().getNumReducers();
+      return false;
     }
     tezBucketJoinProcCtx.setNumBuckets(numBuckets);
     return true;
