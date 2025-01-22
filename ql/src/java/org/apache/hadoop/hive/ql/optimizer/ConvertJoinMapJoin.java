@@ -755,6 +755,7 @@ public class ConvertJoinMapJoin implements SemanticNodeProcessor {
      * join column in say a group by operation
      */
     if (numBuckets < 0) {
+      LOG.info("Estimated number of buckets " + numBuckets + ", so can not conversion to bucket map join");
       return false;
     }
     tezBucketJoinProcCtx.setNumBuckets(numBuckets);
