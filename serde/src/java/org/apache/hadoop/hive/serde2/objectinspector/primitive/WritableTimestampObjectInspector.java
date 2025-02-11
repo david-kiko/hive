@@ -18,8 +18,11 @@
 package org.apache.hadoop.hive.serde2.objectinspector.primitive;
 
 import org.apache.hadoop.hive.common.type.Timestamp;
+import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 import org.apache.hadoop.hive.serde2.io.TimestampWritableV2;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+
+import java.time.LocalDateTime;
 
 public class WritableTimestampObjectInspector extends
     AbstractPrimitiveWritableObjectInspector implements
@@ -35,7 +38,15 @@ public class WritableTimestampObjectInspector extends
   }
 
   public Timestamp getPrimitiveJavaObject(Object o) {
-    return o == null ? null : ((TimestampWritableV2) o).getTimestamp();
+    if ( o != null) {
+      if (o instanceof TimestampWritableV2) {
+        return ((TimestampWritableV2) o).getTimestamp();
+      } else if (o instanceof TimestampWritable) {
+        java.sql.Timestamp ts = ((TimestampWritable) o).getTimestamp();
+        return Timestamp.ofEpochMilli(ts.getTime(), ts.getNanos());
+      }
+    }
+    return null;
   }
 
   public Object copyObject(Object o) {
