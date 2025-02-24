@@ -97,6 +97,10 @@ public class Date implements Comparable<Date> {
     return localDate.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
   }
 
+  public long toEpochSecondOfHours(int hours) {
+    return localDate.atStartOfDay().toEpochSecond(ZoneOffset.ofHours(hours));
+  }
+
   public long toEpochMilli() {
     return localDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli();
   }

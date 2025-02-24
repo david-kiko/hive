@@ -22,8 +22,6 @@ import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 import org.apache.hadoop.hive.serde2.io.TimestampWritableV2;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
-import java.time.LocalDateTime;
-
 public class WritableTimestampObjectInspector extends
     AbstractPrimitiveWritableObjectInspector implements
     SettableTimestampObjectInspector {
@@ -50,7 +48,15 @@ public class WritableTimestampObjectInspector extends
   }
 
   public Object copyObject(Object o) {
-    return o == null ? null : new TimestampWritableV2((TimestampWritableV2) o);
+    if ( o != null) {
+      if (o instanceof TimestampWritableV2) {
+        return new TimestampWritableV2((TimestampWritableV2) o);
+      } else {
+        return new TimestampWritableV2(getPrimitiveJavaObject(o));
+      }
+    }
+
+    return null;
   }
 
   public Object set(Object o, byte[] bytes, int offset) {

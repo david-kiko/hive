@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorUDFUnixTimeStampD
 import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorUDFUnixTimeStampString;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorUDFUnixTimeStampTimestamp;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
@@ -157,7 +158,7 @@ public class GenericUDFToUnixTimeStamp extends GenericUDF {
       }
     } else if (inputDateOI != null) {
       retValue.set(inputDateOI.getPrimitiveWritableObject(arguments[0].get())
-                   .getTimeInSeconds());
+                   .getTimeInSecondsOfHours(8));
       return retValue;
     } else if (inputTimestampLocalTzOI != null)  {
       TimestampTZ timestampTZ =

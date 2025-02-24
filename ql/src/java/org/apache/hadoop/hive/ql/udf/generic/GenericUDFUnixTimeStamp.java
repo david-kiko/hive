@@ -45,8 +45,9 @@ public class GenericUDFUnixTimeStamp extends GenericUDFToUnixTimeStamp {
     } else {
       if (currentTimestamp == null) {
         currentTimestamp = new LongWritable(0);
-        setValueFromTs(currentTimestamp, Timestamp.ofEpochMilli(SessionState.get().getQueryCurrentTimestamp().toEpochMilli()));
-        String msg = "unix_timestamp(void) is deprecated. Use current_timestamp instead.";
+        Timestamp timestamp = Timestamp.ofEpochMilli(SessionState.get().getQueryCurrentTimestamp().toEpochMilli() + 8 * 3600 * 1000);
+        setValueFromTs(currentTimestamp, timestamp);
+        String msg = "unix_timestamp(void) is deprecated. Use current_timestamp instead. debug by david milli：" + timestamp;
         SessionState.getConsole().printInfo(msg, false);
       }
     }

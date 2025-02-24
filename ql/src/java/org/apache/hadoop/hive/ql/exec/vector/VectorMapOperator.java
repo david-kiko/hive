@@ -944,15 +944,9 @@ public class VectorMapOperator extends AbstractMapOperator {
 
               // Convert input row to standard objects.
               List<Object> standardObjects = new ArrayList<Object>();
-              try {
-                ObjectInspectorUtils.copyToStandardObject(
-                    standardObjects,
-                    deserialized,
-                    currentPartRawRowObjectInspector,
-                    ObjectInspectorCopyOption.WRITABLE);
-              } catch (Exception e) {
-                throw new HiveException("copyToStandardObject failed: " + e);
-              }
+
+              ObjectInspectorUtils.copyToStandardObject(standardObjects, deserialized, currentPartRawRowObjectInspector, ObjectInspectorCopyOption.WRITABLE);
+
               if (standardObjects.size() < currentDataColumnCount) {
                 throw new HiveException("Input File Format returned row with too few columns");
               }

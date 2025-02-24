@@ -98,6 +98,10 @@ public class DateWritableV2 implements WritableComparable<DateWritableV2> {
     return date.toEpochSecond();
   }
 
+  public long getTimeInSecondsOfHours(int hours) {
+    return date.toEpochSecondOfHours(hours);
+  }
+
   public static Date timeToDate(long seconds) {
     return Date.ofEpochMilli(seconds * 1000);
   }
