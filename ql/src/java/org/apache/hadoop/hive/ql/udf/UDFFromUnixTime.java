@@ -68,7 +68,7 @@ public class UDFFromUnixTime extends UDF {
       return null;
     }
 
-    return eval(unixtime.get(), format);
+    return eval(unixtime.get() + 8 * 3600, format);
   }
   
   /**
@@ -83,7 +83,7 @@ public class UDFFromUnixTime extends UDF {
       return null;
     }
 
-    return eval(unixtime.get(), defaultFormat);
+    return eval(unixtime.get() + 8 * 3600, defaultFormat);
   }
 
   /**
@@ -102,7 +102,7 @@ public class UDFFromUnixTime extends UDF {
       return null;
     }
 
-    return eval(unixtime.get(), format);
+    return eval(unixtime.get() + 8 * 3600, format);
   }
 
   /**
