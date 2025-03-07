@@ -151,19 +151,19 @@ public class GenericUDFToUnixTimeStamp extends GenericUDF {
         }
       }
       try {
-        retValue.set(formatter.parse(textVal).getTime() / 1000);
+        retValue.set(formatter.parse(textVal).getTime() / 1000 - 8 * 3600);
         return retValue;
       } catch (ParseException e) {
         return null;
       }
     } else if (inputDateOI != null) {
       retValue.set(inputDateOI.getPrimitiveWritableObject(arguments[0].get())
-                   .getTimeInSecondsOfHours(8));
+                   .getTimeInSeconds() - 8 * 3600);
       return retValue;
     } else if (inputTimestampLocalTzOI != null)  {
       TimestampTZ timestampTZ =
           inputTimestampLocalTzOI.getPrimitiveJavaObject(arguments[0].get());
-      retValue.set(timestampTZ.getEpochSecond());
+      retValue.set(timestampTZ.getEpochSecond() - 8 * 3600);
       return retValue;
     }
     Timestamp timestamp = inputTimestampOI.getPrimitiveJavaObject(arguments[0].get());
